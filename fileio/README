@@ -1,0 +1,6 @@
+How to run:
+mkdir /cgroup
+mount -t cgroup -o freezer,ns cgroup /cgroup
+sh f1.loop
+
+And watch the fun output scroll by...

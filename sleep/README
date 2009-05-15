@@ -1,0 +1,16 @@
+This test still needs to be automated.  What I do right now
+is
+alias freeze='echo FROZEN > /cgroup/1/freezer.state'
+alias thaw='echo THAWED > /cgroup/1/freezer.state'
+# in terminal 1:
+./sleep
+# in terminal 2:
+freeze
+../ckpt `pidof sleep` > o.sleep
+thaw
+killall sleep
+../rstr < o.sleep
+
+Success means that the restarted sleep should sleep for
+much more than 5 seconds.  If it only sleeps for 5
+seconds, then the restart block was not properly set up.

@@ -1,0 +1,16 @@
+This top-level directory contains:
+	cr: checkpoint program
+		usage: cr pid outfile
+		or: cr > outfile
+	rstr: restart program
+		usage: cr infile
+		or: cr < infile
+	ns_exec: execute with new namespaces
+	gettimeofday: test using gettimeofday syscall
+
+See the README in each directory for how to use each test.
+
+OR, to run the tests automatically, just type
+
+make
+bash ./runall.sh

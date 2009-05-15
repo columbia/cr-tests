@@ -1,0 +1,20 @@
+This test still needs to be automated.  What I do right now
+is
+alias freeze='echo FROZEN > /cgroup/1/freezer.state'
+alias thaw='echo THAWED > /cgroup/1/freezer.state'
+# in terminal 1, either:
+./userns_ckptme
+# or
+./userns_ckptme blah
+# in terminal 2:
+freeze
+../ckpt `pidof userns_ckptme` > o.userns_ckptme
+thaw
+killall userns_ckptme
+../rstr < o.userns_ckptme
+
+If successful, one of the userns_ckptme tasks should
+be running as uid and gid 501, the rest should still
+be 0/0 at first.  Each task will wait for the one
+it cloned, then set{gu}id(501), then output its pid
+and uid to /tmp/userns.txt.
