@@ -6,10 +6,10 @@ alias thaw='echo THAWED > /cgroup/1/freezer.state'
 ./sleep
 # in terminal 2:
 freeze
-../ckpt `pidof sleep` > o.sleep
+$usercrdir/ckpt `pidof sleep` > o.sleep
 thaw
 killall sleep
-../rstr < o.sleep
+$usercrdir/rstr < o.sleep
 
 Success means that the restarted sleep should sleep for
 much more than 5 seconds.  If it only sleeps for 5

@@ -8,10 +8,10 @@ alias thaw='echo THAWED > /cgroup/1/freezer.state'
 ./userns_ckptme blah
 # in terminal 2:
 freeze
-../ckpt `pidof userns_ckptme` > o.userns_ckptme
+$usercrdir/ckpt `pidof userns_ckptme` > o.userns_ckptme
 thaw
 killall userns_ckptme
-../rstr < o.userns_ckptme
+$usercrdir/rstr < o.userns_ckptme
 
 If successful, one of the userns_ckptme tasks should
 be running as uid and gid 501, the rest should still

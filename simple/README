@@ -3,6 +3,6 @@ How to use:
    ^C
 cat /tmp/cr-test.out
    (  notice ret is > 0  )
-../rstr < out
+$usercrdir/rstr < out
    ^C
    (  notice ret = 0  )
