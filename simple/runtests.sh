@@ -2,6 +2,8 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
+RSTR=`which rstr`
+
 ./ckpt > out &
 sleep 1
 if [ ! -f /tmp/cr-test.out ]; then
@@ -14,7 +16,7 @@ if [ ! $v -gt 0 ]; then
 	exit 2
 fi
 
-$usercrdir/rstr < out &
+$RSTR < out &
 sleep 1
 v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 '}`
 if [ $v -ne 0 ]; then

@@ -6,6 +6,9 @@
 
 freezermountpoint=/cgroup
 
+CKPT=`which ckpt`
+RSTR=`which rstr`
+
 DEBUG=0
 my_debug()
 {
@@ -61,7 +64,7 @@ fi
 
 freeze $pid
 pre=`cat counter_out`
-$usercrdir/ckpt $pid > o.1
+$CKPT $pid > o.1
 unfreeze $pid
 sleep 7
 
@@ -71,7 +74,7 @@ unfreeze $pid
 kill $pid
 
 #../ns_exec -m $usercrdir/rstr < ./o.1 &
-$usercrdir/rstr < ./o.1 &
+$RSTR < ./o.1 &
 sleep 4
 killall crcounter
 post=`cat counter_out`

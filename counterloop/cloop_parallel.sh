@@ -6,6 +6,10 @@
 
 freezermountpoint=/cgroup
 
+CKPT=`which ckpt`
+RSTR=`which rstr`
+MKTREE=`which mktree`
+
 freeze()
 {
 	mkdir ${freezermountpoint}/$1
@@ -54,7 +58,7 @@ echo pids is $pids
 numjobs=`echo $pids | wc -w`
 echo "Checkpoint all the tasks ($numjobs of them)"
 for pid in $pids; do
-	(freeze $pid; sleep 0.3; $usercrdir/ckpt $pid > d.$cnt/ckpt.out; unfreeze $pid) &
+	(freeze $pid; sleep 0.3; $CKPT $pid > d.$cnt/ckpt.out; unfreeze $pid) &
 	cnt=$((cnt+1))
 done
 
@@ -64,7 +68,7 @@ killall crcounter
 echo Restarting all jobs in parallel
 
 for i in `seq 1 $NUMJOBS`; do
-	(cd d.$i; $usercrdir/mktree < ckpt.out) &
+	(cd d.$i; $MKTREE < ckpt.out) &
 done
 
 echo Giving those jobs some time to restart...

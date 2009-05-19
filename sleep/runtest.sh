@@ -13,6 +13,9 @@ fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
 mkdir $freezermountpoint/1 > /dev/null 2>&1
 
+MKTREE=`which mktree`
+CKPT=`which ckpt`
+RSTR=`which rstr`
 
 freeze()
 {
@@ -29,10 +32,10 @@ killall sleeptest > /dev/null 2>&1
 ./sleeptest &
 sleep 1
 freeze
-$usercrdir/ckpt `pidof sleeptest` > o.sleep
+$CKPT `pidof sleeptest` > o.sleep
 thaw
 killall sleeptest
-$usercrdir/rstr < o.sleep &
+$RSTR < o.sleep &
 sleep 0.3
 pidof sleeptest
 if [ $? -ne 0 ]; then

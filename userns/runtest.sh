@@ -13,6 +13,9 @@ fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
 mkdir $freezermountpoint/1 > /dev/null 2>&1
 
+CKPT=`which ckpt`
+MKTREE=`which mktree`
+
 freeze()
 {
 	echo FROZEN > ${freezermountpoint}/1/freezer.state
@@ -23,22 +26,18 @@ thaw()
 	echo THAWED > ${freezermountpoint}/1/freezer.state
 }
 
-if [ "x$usercrdir" == "x" ]; then
-	echo "Please define usercrdir as your user-cr directory"
-fi
-
 ./userns_ckptme &
 sleep 1
 job=`jobs -p`
 freeze
 sleep 1
-$usercrdir/ckpt $job > o.userns
+$CKPT $job > o.userns
 ps -ef | grep userns_ckptme | grep -v grep > psout
 correct_nlines=`cat psout | wc -l`
 thaw
 killall userns_ckptme
 
-$usercrdir/mktree < o.userns &
+$MKTREE < o.userns &
 sleep 1
 ps -ef | grep userns_ckptme | grep -v grep > psout
 

@@ -2,10 +2,21 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-if [ "x$usercrdir" == "x" ]; then
-	echo "Please set usercrdir to the location of your user-cr directory"
+which ckpt
+ret1=$?
+which mktree
+ret2=$?
+which rstr
+ret3=$?
+if [ $ret1 -ne 0 || $ret2 -ne 0 || $ret3 -ne 0 ]; then
+	echo Please place the ckpt, rstr, and mktree programs from user-cr
+	echo in your PATH.
 	exit 1
 fi
+
+export CKPT=`which ckpt`
+export MKTREE=`which mktree`
+export RSTR=`which rstr`
 
 line=`grep freezer /proc/mounts`
 if [ $? -ne 0 ]; then

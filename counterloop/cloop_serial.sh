@@ -7,6 +7,10 @@
 
 freezermountpoint=/cgroup
 
+CKPT=`which ckpt`
+RSTR=`which rstr`
+MKTREE=`which mktree`
+
 DEBUG=0
 debug()
 {
@@ -67,13 +71,13 @@ for cnt in `seq 1 $NUMLOOPS`; do
 	fi
 	freeze $pid
 	sleep 0.3s
-	$usercrdir/ckpt $pid > o.$cnt
+	$CKPT $pid > o.$cnt
 	echo ckpt returned $?
 	unfreeze $pid
 	kill -9 $pid
-	#../ns_exec -m $usercrdir/rstr < ./o.$cnt &
+	#../ns_exec -m $RSTR < ./o.$cnt &
 	sleep 1  # why?  Dunno...
-	$usercrdir/rstr < ./o.$cnt &
+	$RSTR < ./o.$cnt &
 	v=$((cnt%25))
 	if [ $v -eq 0 ]; then
 		sleep 4
