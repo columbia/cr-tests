@@ -9,6 +9,7 @@
 
 #include <linux/sched.h>
 #include <sched.h>
+#include "../clone.h"
 
 #define OUTFILE  "/tmp/cr-test.out"
 #define SEG_SIZE (20 * 4096)
