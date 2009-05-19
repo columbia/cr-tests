@@ -11,9 +11,17 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
-mkdir $freezermountpoint/1
-alias freeze="echo FROZEN > $freezermountpoint/1/freezer.state"
-alias thaw="echo THAWED > $freezermountpoint/1/freezer.state"
+mkdir $freezermountpoint/1 > /dev/null 2>&1
+
+freeze()
+{
+	echo FROZEN > ${freezermountpoint}/1/freezer.state
+}
+
+thaw()
+{
+	echo THAWED > ${freezermountpoint}/1/freezer.state
+}
 
 if [ "x$usercrdir" == "x" ]; then
 	echo "Please define usercrdir as your user-cr directory"
