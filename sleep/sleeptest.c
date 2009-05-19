@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
 	close(2);
 	close(3);
 	close(4);
-	sleep(40);
-	sleep(5);
+	sleep(3);
+	sleep(3);
+	exit(0);
 }

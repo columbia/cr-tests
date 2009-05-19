@@ -38,6 +38,7 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running fileio test
 pushd fileio
 bash runtests.sh
 if [ $? -ne 0 ]; then
@@ -46,19 +47,30 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
-pushd cr-ipc-test
-bash runtests.sh
+echo Running userid/namespace test
+pushd userns
+bash runtest.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 4
 fi
 popd
 
-pushd userns
+echo Running restart block test
+pushd sleep
 bash runtest.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 5
+fi
+popd
+
+# these currently fail...
+pushd cr-ipc-test
+bash runtests.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 6
 fi
 popd
 

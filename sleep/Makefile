@@ -1,4 +1,4 @@
-targets = sleep
+targets = sleeptest
 
 all: $(targets)
 
