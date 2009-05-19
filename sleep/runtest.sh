@@ -1,7 +1,28 @@
 #!/bin/sh
+# Copyright 2009 IBM Corp.
+# Author: Serge Hallyn
 
-alias freeze='echo FROZEN > /cgroup/1/freezer.state'
-alias thaw='echo THAWED > /cgroup/1/freezer.state'
+# Check freezer mount point
+line=`grep freezer /proc/mounts`
+if [ $? -ne 0 ]; then
+	echo "please mount freezer cgroup"
+	echo "  mkdir /cgroup"
+	echo "  mount -t cgroup -o freezer freezer /cgroup"
+	exit 1
+fi
+freezermountpoint=`echo $line | awk '{ print $2 '}`
+mkdir $freezermountpoint/1 > /dev/null 2>&1
+
+
+freeze()
+{
+	echo FROZEN > ${freezermountpoint}/1/freezer.state
+}
+
+thaw()
+{
+	echo THAWED > ${freezermountpoint}/1/freezer.state
+}
 
 killall sleeptest > /dev/null 2>&1
 
