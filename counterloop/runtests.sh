@@ -6,10 +6,14 @@
 # Check freezer mount point
 line=`grep freezer /proc/mounts`
 if [ $? -ne 0 ]; then
-	echo "please mount freezer and ns cgroups"
+	echo "please mount freezer cgroup"
 	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer,ns cgroup /cgroup"
+	echo "  mount -t cgroup -o freezer cgroup /cgroup"
 	exit 1
+fi
+freezermountpoint=`echo $line | awk '{ print $2 '}`
+if [ ! -d ${freezermountpoint}/1 ]; then
+	mkdir ${freezermountpoint}/1
 fi
 
 echo TEST 1: correctness of single checkpoint

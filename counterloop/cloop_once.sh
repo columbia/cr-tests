@@ -17,7 +17,9 @@ my_debug()
 freeze()
 {
 	my_debug "freezing $1"
-	echo FROZEN > ${freezermountpoint}/$1/freezer.state
+	echo $1 > ${freezermountpoint}/1/tasks
+	sleep 0.3s
+	echo FROZEN > ${freezermountpoint}/1/freezer.state
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "failed to freeze, return value $ret"
@@ -27,20 +29,20 @@ freeze()
 unfreeze()
 {
 	my_debug "unfreezing $1"
-	echo THAWED > ${freezermountpoint}/$1/freezer.state
+	echo THAWED > ${freezermountpoint}/1/freezer.state
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "failed to freeze, return value $ret"
 	fi
+	echo $1 > ${freezermountpoint}/tasks
 }
 
 # Check freezer mount point
 line=`grep freezer /proc/mounts`
-echo $line | grep "\<ns\>"
 if [ $? -ne 0 ]; then
-	echo "please mount freezer and ns cgroups"
+	echo "please mount freezer cgroup"
 	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer,ns cgroup /cgroup"
+	echo "  mount -t cgroup -o freezer cgroup /cgroup"
 	exit 1
 fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
@@ -59,7 +61,7 @@ fi
 
 freeze $pid
 pre=`cat counter_out`
-../cr $pid o.1
+$usercrdir/ckpt $pid > o.1
 unfreeze $pid
 sleep 7
 
@@ -68,8 +70,8 @@ prekill=`cat counter_out`
 unfreeze $pid
 kill $pid
 
-#../ns_exec -m ../rstr ./o.1 &
-../rstr ./o.1 &
+#../ns_exec -m $usercrdir/rstr < ./o.1 &
+$usercrdir/rstr < ./o.1 &
 sleep 4
 killall crcounter
 post=`cat counter_out`

@@ -14,7 +14,7 @@ if [ ! $v -gt 0 ]; then
 	exit 2
 fi
 
-../rstr < out &
+$usercrdir/rstr < out &
 sleep 1
 v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 '}`
 if [ $v -ne 0 ]; then

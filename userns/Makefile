@@ -5,4 +5,4 @@ all: $(targets)
 userns_ckptme: userns_ckptme.c ../clone.h
 
 clean:
-	rm -f $(targets) o.*
+	rm -f $(targets) o.* psout

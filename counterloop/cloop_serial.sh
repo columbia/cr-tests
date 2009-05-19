@@ -18,7 +18,9 @@ debug()
 freeze()
 {
 	debug "freezing $1"
-	echo FROZEN > ${freezermountpoint}/$1/freezer.state
+	echo $1 > ${freezermountpoint}/1/tasks
+	sleep 0.3
+	echo FROZEN > ${freezermountpoint}/1/freezer.state
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "failed to freeze, return value $ret"
@@ -28,20 +30,20 @@ freeze()
 unfreeze()
 {
 	debug "unfreezing $1"
-	echo THAWED > ${freezermountpoint}/$1/freezer.state
+	echo THAWED > ${freezermountpoint}/1/freezer.state
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "failed to freeze, return value $ret"
 	fi
+	echo $1 > ${freezermountpoint}/tasks
 }
 
 # Check freezer mount point
 line=`grep freezer /proc/mounts`
-echo $line | grep "\<ns\>"
 if [ $? -ne 0 ]; then
-	echo "please mount freezer and ns cgroups"
+	echo "please mount freezer cgroup"
 	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer,ns cgroup /cgroup"
+	echo "  mount -t cgroup -o freezer cgroup /cgroup"
 	exit 1
 fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
@@ -50,24 +52,29 @@ freezermountpoint=`echo $line | awk '{ print $2 '}`
 killall crcounter
 
 rm counter_out
-../ns_exec -m ./crcounter &
-sleep 1
+#../ns_exec -m ./crcounter &
+./crcounter &
+sleep 0.3
 
 NUMLOOPS=50
 
 for cnt in `seq 1 $NUMLOOPS`; do
+	echo Iteration $cnt
 	pid=`pidof crcounter`
 	if [  "x$pid" == "x" ]; then
 		echo FAIL: crcounter is not running.
 		exit 1
 	fi
 	freeze $pid
-	../cr $pid o.$cnt
+	sleep 0.3s
+	$usercrdir/ckpt $pid > o.$cnt
+	echo ckpt returned $?
 	unfreeze $pid
 	kill -9 $pid
-	#../ns_exec -m ../rstr ./o.$cnt &
-	../rstr ./o.$cnt &
-	v=$(($cnt%25))
+	#../ns_exec -m $usercrdir/rstr < ./o.$cnt &
+	sleep 1  # why?  Dunno...
+	$usercrdir/rstr < ./o.$cnt &
+	v=$((cnt%25))
 	if [ $v -eq 0 ]; then
 		sleep 4
 	else

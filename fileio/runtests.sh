@@ -5,8 +5,8 @@
 freezermountpoint=/cgroup
 CHECKPOINT="../"
 NS_EXEC="../ns_exec"
-CR="../cr"
-RSTR="../rstr"
+CR="$usercrdir/ckpt"
+RSTR="$usercrdir/rstr"
 
 SLOW_DOWN="slow-down-fileio"
 CKPT_FILE="ckpt-fileio1";
@@ -21,56 +21,34 @@ TEST_LOG_SNAP="log.fileio1.snap"
 LOG_FILE="f1-loop.log"
 TEST_CMD="./fileio1"
 
-DEBUG=0
-my_debug()
-{
-	if [ $DEBUG -eq 1 ]; then
-		echo $*
-	fi
-}
-
 freeze()
 {
-	my_debug "freezing $1"
+	mkdir ${freezermountpoint}/$1
+	echo $1 > ${freezermountpoint}/$1/tasks
+	sleep 0.3
 	/bin/echo FROZEN > ${freezermountpoint}/$1/freezer.state
-	ret=$?
-	if [ $ret -ne 0 ]; then
-		echo "failed to freeze, return value $ret"
-	fi
+	sleep 0.3
 }
 
 unfreeze()
 {
-	my_debug "unfreezing $1"
 	/bin/echo THAWED > ${freezermountpoint}/$1/freezer.state
-	ret=$?
-	if [ $ret -ne 0 ]; then
-		echo "failed to freeze, return value $ret"
-	fi
-}
-
-cleancgroup()
-{
-	my_debug "Clean cgroup of $1"
+	echo $1 > ${freezermountpoint}/tasks
+	sleep 0.3
 	rmdir ${freezermountpoint}/$1
-	if [ -d ${freezermountpoint}/$1 ]; then
-		echo ************ WARNING ${freezermountpoint}/$1 remains
-	fi
 }
-
 
 # Check freezer mount point
 line=`grep freezer /proc/mounts`
-echo $line | grep "\<ns\>"
 if [ $? -ne 0 ]; then
-	echo "please mount freezer and ns cgroups"
+	echo "please mount freezer cgroups"
 	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer,ns cgroup /cgroup"
+	echo "  mount -t cgroup -o freezer cgroup /cgroup"
 	exit 1
 fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
 
-# Make sure no stray e2 from another run is still going
+# Make sure no stray TEST_CMD from another run is still going
 killall $TEST_CMD
 
 #echo > $LOG_FILE
@@ -110,8 +88,8 @@ for testnum in `seq 1 $NUMTESTS`; do
 	freeze $pid
 
 	# Checkpoint
-	echo $CR $pid $CKPT_FILE
-	$CR $pid $CKPT_FILE
+	echo $CR $pid > $CKPT_FILE
+	$CR $pid > $CKPT_FILE
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "===== Checkpoint of $pid failed"
@@ -128,7 +106,6 @@ for testnum in `seq 1 $NUMTESTS`; do
 	unfreeze $pid
 
 	kill -9 $pid
-	cleancgroup $pid
 
 	# Restore the snapshot after the main process has been killed
 	cp ${DEST_FILE}.snap $DEST_FILE
@@ -140,7 +117,7 @@ for testnum in `seq 1 $NUMTESTS`; do
 	rm -f $COPY_DONE;
 
 	# Restart.
-	$NS_EXEC -m $RSTR $CKPT_FILE &
+	$NS_EXEC -m rstrsh $CKPT_FILE &
 	ret=$?
 
 	if [ $ret -ne 0 ]; then
@@ -179,8 +156,6 @@ for testnum in `seq 1 $NUMTESTS`; do
 		echo "file copy ($SRC_FILE -> $DEST_FILE) failed after restart"
 		exit 1;
 	fi
-
-	cleancgroup $pid
 
 	cnt=$((cnt+1))
 
