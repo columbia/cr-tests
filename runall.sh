@@ -36,4 +36,12 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+pushd userns
+bash runtest.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 5
+fi
+popd
+
 exit 0

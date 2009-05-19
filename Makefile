@@ -1,4 +1,4 @@
-SUBDIRS = counterloop fileio simple cr-ipc-test
+SUBDIRS = counterloop fileio simple cr-ipc-test userns
 
 targets = cr ns_exec rstr
 

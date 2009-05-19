@@ -33,7 +33,7 @@ int do_child(void *vargv)
 	}
 	setgid(501);
 	setuid(501);
-	sleep(40);
+	sleep(4);
 	write_status();
 	return 1;
 }
@@ -46,7 +46,7 @@ int do_clone(long depth)
 	unsigned long flags = 0;
 
 	if (clone_newuser)
-		flags |= CLONE_NEWUSER
+		flags |= CLONE_NEWUSER;
 
 	if (!stack) {
 		return -1;
@@ -57,7 +57,7 @@ int do_clone(long depth)
 	if (pid == -1) {
 		return -1;
 	}
-	sleep(25);
+	sleep(4);
 	return 0;
 }
 
@@ -78,7 +78,10 @@ int main(int argc, char *argv[])
 		printf("Failed to move myself to cgroup /1\n");
 		exit(1);
 	}
-	if (argc > 1) {
+	/*
+	 * give an argument to NOT clone with CLONE_NEWUSER
+	 */
+	if (argc == 1) {
 		printf("Will clone with CLONE_NEWUSER\n");
 		clone_newuser = 1;
 	}
