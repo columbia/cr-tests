@@ -71,12 +71,21 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running bash test
+pushd bashckpt
+bash bash-cr.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	echo 5
+fi
+popd
+
 echo Running restart block test
 pushd sleep
 bash runtest.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
-	exit 5
+	exit 6
 fi
 popd
 
@@ -85,7 +94,7 @@ pushd cr-ipc-test
 bash runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
-	exit 6
+	exit 7
 fi
 popd
 

@@ -42,6 +42,6 @@ while [ ! -f $step2go ] ; do : ; done
 
 echo "Step 2 OK."
 
-cat /proc/$$/maps
+#cat /proc/$$/maps
 
-touch $step2ok
+echo > $step2ok
