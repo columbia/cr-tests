@@ -2,15 +2,19 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-which ckpt
-ret1=$?
-which mktree
-ret2=$?
-which rstr
-ret3=$?
-if [ $ret1 -ne 0 || $ret2 -ne 0 || $ret3 -ne 0 ]; then
-	echo Please place the ckpt, rstr, and mktree programs from user-cr
-	echo in your PATH.
+which ckpt > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+	echo Please place ckpt from user-cr in your PATH
+	exit 1
+fi
+which rstr > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+	echo Please place rstr from user-cr in your PATH
+	exit 1
+fi
+which mktree > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+	echo Please place mktree from user-cr in your PATH
 	exit 1
 fi
 
