@@ -24,7 +24,7 @@ static const char* procname;
 
 static void usage(const char *name)
 {
-	printf("usage: %s [-h] [-c] [-muip]"
+	printf("usage: %s [-h] [-c] [-muip] [-P <pid-file>]"
 			"[command [arg ..]]\n", name);
 	printf("\n");
 	printf("  -h		this message\n");
@@ -33,6 +33,7 @@ static void usage(const char *name)
 	printf("  -m		mount namespace\n");
 	printf("  -u		utsname namespace\n");
 	printf("  -i		ipc namespace\n");
+	printf("  -P <pid-file>	File in which to write global pid of cinit\n");
 	printf("  -p		pid namespace\n");
 	printf("  -f <flag>	extra clone flags\n");
 	printf("\n");
@@ -109,6 +110,24 @@ int do_child(void *vargv)
 	return 1;
 }
 
+void write_pid(char *pid_file, int pid)
+{
+	FILE *fp;
+	char buf[16];
+
+	if (!pid_file)
+		return;
+
+	fp = fopen(pid_file, "w");
+	if (!fp) {
+		perror("fopen, pid_file");
+		exit(1);
+	}
+	fprintf(fp, "%d", pid);
+	fflush(fp);
+	fclose(fp);
+}
+
 int main(int argc, char *argv[])
 {	
 	int c;
@@ -117,16 +136,18 @@ int main(int argc, char *argv[])
 	int status;
 	int ret, use_clone = 0;
 	int pid;
+	char *pid_file = NULL;
 
 	procname = basename(argv[0]);
 
 	memset(ttyname, '\0', sizeof(ttyname));
 	readlink("/proc/self/fd/0", ttyname, sizeof(ttyname));
 
-	while ((c = getopt(argc, argv, "+muUiphcnf:")) != EOF) {
+	while ((c = getopt(argc, argv, "+muUiphcnf:P:")) != EOF) {
 		switch (c) {
 		case 'm': flags |= CLONE_NEWNS;  break;
 		case 'c': use_clone = 1; break;
+		case 'P': pid_file = optarg; 			break;
 		case 'u': flags |= CLONE_NEWUTS;		break;
 		case 'i': flags |= CLONE_NEWIPC;		break;
 		case 'U': flags |= CLONE_NEWUSER;		break;
@@ -179,6 +200,9 @@ int main(int argc, char *argv[])
 		}
 
 	}
+
+	write_pid(pid_file, pid);
+
 	if ((ret = waitpid(pid, &status, __WALL)) < 0)
 		printf("waitpid() returns %d, errno %d\n", ret, errno);
 
