@@ -64,7 +64,7 @@ popd
 
 echo Running userid/namespace test
 pushd userns
-bash runtest.sh
+bash runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 4
