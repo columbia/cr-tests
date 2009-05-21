@@ -51,10 +51,12 @@ int move_to_cgroup_1(void)
 }
 
 #define DIRNAME "./sandbox"
+#define ERRFILE DIRNAME "/error"
 int create_sandbox(int uid, int gid)
 {
 	int ret;
 
+	unlink(ERRFILE);
 	ret = mkdir(DIRNAME, 0755);
 	if (ret == -1 && errno != EEXIST) {
 		perror("mkdir");
@@ -156,8 +158,10 @@ int main(int argc, char *argv[])
 	/* we either did a restart, or we waited on external ckpt */
 	fprintf(file, "here I am, pid %d uid %d\n", getpid(), getuid());
 	d = opendir("/root");
-	if (d)  /* shouldn't be allowed */
+	if (d)  /* shouldn't be allowed */ {
+		creat(ERRFILE, 0755);
 		fprintf(file, "I managed to opendir(/root) - OOPS\n");
+	}
 	fflush(file);
 	fclose(file);
 	sleep(5);

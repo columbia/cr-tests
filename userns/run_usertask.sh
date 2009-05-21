@@ -69,5 +69,10 @@ ls -l /proc/$pid/fd
 
 killall usertask
 
+if [ -f sandbox/error ]; then
+	echo "FAIL: unprivileged user read /root"
+	exit 1
+fi
+
 echo PASS
 exit 0
