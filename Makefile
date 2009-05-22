@@ -1,4 +1,5 @@
-SUBDIRS = counterloop fileio simple cr-ipc-test userns sleep libcrtest
+SUBDIRS = counterloop fileio simple cr-ipc-test userns sleep libcrtest \
+	  process-tree
 
 targets = ns_exec
 
