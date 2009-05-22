@@ -16,10 +16,17 @@
  * Note: To avoid touching restart-blocks, don't sleep().
  */
 
+enum work_type {
+	WORK_FILEIO,
+	WORK_SLEEP,
+};
+
 int max_depth = 2;
 int num_children = 2;
 FILE *logfp;
 char *src = "input.data";
+int work = WORK_FILEIO;
+
 #define LOG_PREFIX	"logs.d/ptree1"
 #define DATA_PREFIX	"data.d/ptree1"
 
@@ -33,7 +40,18 @@ static void do_work(char *id_str)
 	i = 0;
 	while(!test_done()) {
 		fprintf(logfp, "%s: do_work() i %d\n", id_str, i++);
-		copy_data(src, dest);
+
+		switch (work)  {
+		case WORK_FILEIO:
+			copy_data(src, dest);
+			break;
+		case WORK_SLEEP:
+			sleep(1);
+			break;
+		default:
+			fprintf(logfp, "Unknow work %d\n", work);
+			do_exit(1);
+		}
 	}
 
 	do_exit(0);
@@ -116,7 +134,8 @@ do_child(int depth, char *id_str)
 
 static void usage(char *argv[])
 {
-	printf("%s [h] [-d max-depth] [-n max-children]\n", argv[0]);
+	printf("%s [h] [-d max-depth] [-n max-children] [-w <sleep|fileio>\n",
+				argv[0]);
 	printf("\t <max-depth> max depth of process tree, default 3\n");
 	printf("\t <num-children> # of children per process, default 3\n");
 	do_exit(1);
@@ -145,10 +164,12 @@ main(int argc, char *argv[])
 		do_exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "hd:n:")) != EOF) {
+	work = WORK_FILEIO;
+	while ((c = getopt(argc, argv, "hd:n:w:")) != EOF) {
 		switch (c) {
 		case 'd': max_depth = atoi(optarg); break;
 		case 'n': num_children = atoi(optarg); break;
+		case 'w': if (optarg[0] == 's') work = WORK_SLEEP; break;
 		case 'h':
 		default:
 			usage(argv);

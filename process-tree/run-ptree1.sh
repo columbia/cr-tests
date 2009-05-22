@@ -11,7 +11,9 @@ FILEIO="../fileio/fileio1"
 ECHO="/bin/echo -e"
 
 TEST_CMD="./ptree1"
-TEST_ARGS="-n 1 -d 0"	# -n: children per process, -d: depth of process tree
+
+# -n: children per process, -d: depth of process tree
+TEST_ARGS="-n 2 -d 1 -w sleep"
 
 SCRIPT_LOG="log-run-ptree1"
 TEST_PID_FILE="pid.ptree1";
