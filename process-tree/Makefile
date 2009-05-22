@@ -1,5 +1,5 @@
 
-targets		= ptree1
+targets		= ptree1 pthread1
 
 INCLUDE		= ../libcrtest
 LIBCRTEST	= ../libcrtest/common.o
