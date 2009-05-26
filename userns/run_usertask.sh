@@ -19,7 +19,7 @@ set +eu ; set -x ; \
 echo THAWED > "${freezermountpoint}/1/freezer.state" ; \
 chmod $rootmode /root' EXIT
 
-chmod 700 /root
+chmod 750 /root
 
 CKPT=`which ckpt`
 MKTREE=`which mktree`

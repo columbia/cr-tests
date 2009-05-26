@@ -83,6 +83,9 @@ int main(int argc, char *argv[])
 	int opt;
 	int external;
 	int fd;
+	int i;
+	int ngrp;
+	gid_t *grplist;
 	DIR *d;
 
 	if (getuid())
@@ -120,6 +123,7 @@ int main(int argc, char *argv[])
 	close(1);
 	close(2);
 
+	setgroups(0, NULL);
 	setgid(gid);
 	setuid(uid);
 
@@ -156,7 +160,13 @@ int main(int argc, char *argv[])
 		exit(0);
 
 	/* we either did a restart, or we waited on external ckpt */
-	fprintf(file, "here I am, pid %d uid %d\n", getpid(), getuid());
+	fprintf(file, "here I am, pid %d uid %d gid %d\n", getpid(), getuid(), getegid());
+	ngrp = getgroups(0, NULL);
+	grplist = malloc(ngrp * sizeof(gid_t));
+	getgroups(ngrp, grplist);
+	for (i=0; i< ngrp; i++) {
+		fprintf(file, "auxgrp %d\n", grplist[i]);
+	}
 	d = opendir("/root");
 	if (d)  /* shouldn't be allowed */ {
 		creat(ERRFILE, 0755);
