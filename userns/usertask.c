@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <dirent.h>
 
+#include <libcrtest.h>
+
 int usage(char *whoami)
 {
 	printf("Usage: %s [-u uid] [-g gid] [-e]\n", whoami);
@@ -38,16 +40,6 @@ int do_checkpoint(pid_t pid, int fd)
 		exit(2);
 	}
 	return ret;
-}
-
-int move_to_cgroup_1(void)
-{
-	FILE *fout = fopen("/cgroup/1/tasks", "w");
-	if (!fout)
-		return 1;
-	fprintf(fout, "%d\n", getpid());
-	fclose(fout);
-	return 0;
 }
 
 #define DIRNAME "./sandbox"
@@ -109,7 +101,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (external && move_to_cgroup_1()) {
+	if (external && !move_to_cgroup("freezer", "1", getpid())) {
 		printf("Couldn't switch to cgroup /1\n");
 		exit(1);
 	}

@@ -3,8 +3,9 @@
 #include <wait.h>
 #include <errno.h>
 #include <string.h>
-#include "common.h"
 #include <stdlib.h>
+
+#include <libcrtest.h>
 
 /*
  * Create a simple process tree and have each process in the tree
@@ -23,7 +24,6 @@ enum work_type {
 
 int max_depth = 2;
 int num_children = 2;
-FILE *logfp;
 char *src = "input.data";
 int work = WORK_FILEIO;
 

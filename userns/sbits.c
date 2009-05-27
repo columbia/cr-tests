@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/prctl.h>
 #include <sys/syscall.h>
+#include <libcrtest.h>
 
 #ifndef PR_GET_SECUREBITS
 #define PR_GET_SECUREBITS 27
@@ -38,16 +39,6 @@ void usage(char *me)
 	exit(1);
 }
 
-int move_to_cgroup_1(void)
-{
-	FILE *fout = fopen("/cgroup/1/tasks", "w");
-	if (!fout)
-		return 1;
-	fprintf(fout, "%d\n", getpid());
-	fclose(fout);
-	return 0;
-}
-
 
 /*
  * call with -k to set pr_keepcaps
@@ -61,7 +52,7 @@ int main(int argc, char *argv[])
 	FILE *fout;
 	int c;
 
-	if (move_to_cgroup_1()) {
+	if (!move_to_cgroup("freezer", "1", getpid())) {
 		printf("Failed to move myself to cgroup /1\n");
 		exit(1);
 	}

@@ -5,24 +5,17 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libcrtest.h>
 
 #define OUTFILE "/tmp/sleepout"
-
-void docgroup(void)
-{
-	FILE *fout = fopen("/cgroup/1/tasks", "w");
-	if (!fout) {
-		printf("Error moving myself into cgroup /1\n");
-		exit(2);
-	}
-	fprintf(fout, "%d\n", getpid());
-	fclose(fout);
-}
 
 int main(int argc, char *argv[])
 {
 	printf("I am %d\n", getpid());
-	docgroup();
+	if (!move_to_cgroup("freezer", "1", getpid())) {
+		printf("Failed to move to freezer cgroup /1\n");
+		do_exit(1);
+	}
 	close(0);
 	close(1);
 	close(2);

@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include "common.h"
+#include <libcrtest.h>
 
 int num_threads = 5;
 FILE *logfp;

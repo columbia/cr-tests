@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 
+#include <libcrtest.h>
 #include "../clone.h"
 
 int clone_newuser;
@@ -61,20 +62,10 @@ int do_clone(long depth)
 	return 0;
 }
 
-int move_to_cgroup_1(void)
-{
-	FILE *fout = fopen("/cgroup/1/tasks", "w");
-	if (!fout)
-		return 1;
-	fprintf(fout, "%d\n", getpid());
-	fclose(fout);
-	return 0;
-}
-
 int main(int argc, char *argv[])
 {
 	printf("I am %d\n", getpid());
-	if (move_to_cgroup_1()) {
+	if (!move_to_cgroup("freezer", "1", getpid())) {
 		printf("Failed to move myself to cgroup /1\n");
 		exit(1);
 	}

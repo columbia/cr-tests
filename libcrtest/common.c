@@ -3,7 +3,10 @@
 #include <wait.h>
 #include <errno.h>
 #include <string.h>
-#include "common.h"
+#include <malloc.h>
+#include "libcrtest.h"
+
+FILE *logfp;
 
 void do_exit(int status)
 {
@@ -55,7 +58,7 @@ void set_checkpoint_ready()
 	close(fd);
 }
 
-void print_exit_status(int pid, int status)
+static void print_exit_status(int pid, int status)
 {
 	fprintf(logfp, "Pid %d unexpected exit - ", pid);
 	if (WIFEXITED(status)) {
@@ -218,4 +221,117 @@ void copy_data(char *srcfile, char *destfile)
 		fprintf(logfp, "ERROR %s closing destfile\n", strerror(errno));
 
 	return;
+}
+
+static char *fieldnumber(char *s, int n)
+{
+	int i = 0;
+	char *c = s;
+	while (*c != '\0') {
+		if (*c == ' ' || *c == '\t') {
+			if (i == n) {
+				*c = '\0';
+				return s;
+			}
+			i++;
+			if (i == n)
+				s = c+1;
+		}
+		c++;
+	}
+	return NULL;
+}
+
+static int mount_entry_has_option(char *entry, char *which)
+{
+	char *saveptr, *tmp;
+
+	tmp = strtok_r(entry, ",", &saveptr);
+	while (tmp && strlen(tmp) != strlen(which) && strcmp(tmp, which))
+		tmp = strtok_r(NULL, ",", &saveptr);
+	if (!tmp)
+		return 0;
+	if (strlen(which) != strlen(tmp))
+		return 0;
+	if (strcmp(tmp, which) != 0)
+		return 0;
+	return 1;
+}
+
+#define MAXPATH 200
+#define MAXLINE 400
+
+static char *freezer_mnt;
+
+char *freezer_mountpoint(void)
+{
+	if (freezer_mnt)
+		return freezer_mnt;
+	FILE *fmounts = fopen("/proc/mounts", "r");
+	char line[MAXLINE];
+	if (!fmounts)
+		return NULL;
+	while (fgets(line, MAXLINE, fmounts)) {
+		char *options, *fstype, *mountpoint;
+		options = fieldnumber(line, 3);
+		fstype = fieldnumber(line, 2);
+		mountpoint = fieldnumber(line, 1);
+		if (!fstype || !options || !mountpoint) {
+			printf("missing fields in /proc/mounts entry\n");
+			do_exit(1);
+		}
+		if (strcmp(fstype, "cgroup"))
+			continue;
+		if (!mount_entry_has_option(options, "freezer"))
+			continue;
+		if (mount_entry_has_option(options, "ns")) {
+			printf("freezer is composed with ns subsystem.\n");
+			do_exit(1);
+		}
+		/* success */
+		freezer_mnt = malloc(strlen(mountpoint)+1);
+		strncpy(freezer_mnt, mountpoint, strlen(mountpoint)+1);
+		break;
+	}
+
+	fclose(fmounts);
+	return freezer_mnt;
+}
+
+static void create_cgroup(char *grp)
+{
+	char dirnam[MAXPATH];
+	snprintf(dirnam, MAXPATH, "%s/%s", freezer_mountpoint(), grp);
+	mkdir(dirnam, 0755);
+}
+
+/*
+ * move process pid to subsys cgroup grp
+ * return 0 on failure, 1 on success
+ */
+int move_to_cgroup(char *subsys, char *grp, int pid)
+{
+	if (strcmp(subsys, "freezer"))
+		return 0;
+	char fname[MAXPATH];
+	if (!freezer_mountpoint()) {
+		printf("freezer cgroup is not mounted.\n");
+		do_exit(1);
+	}
+	create_cgroup(grp);
+
+	snprintf(fname, MAXPATH, "%s/%s/tasks", freezer_mountpoint(), grp);
+	FILE *fout = fopen(fname, "w");
+	if (!fout) {
+		printf("Failed to open freezer taskfile %s\n", fname);
+		return 0;
+	}
+	if (fprintf(fout, "%d\n", pid) <  0) {
+		printf("Failed to write pid to taskfile\n");
+		fclose(fout);
+		return 0;
+	}
+	fflush(fout);
+	fclose(fout);
+	return 1;
 }
