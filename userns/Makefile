@@ -1,8 +1,8 @@
-targets = userns_ckptme usertask
+targets = userns_ckptme usertask sbits
 
 all: $(targets)
 
 userns_ckptme: userns_ckptme.c ../clone.h
 
 clean:
-	rm -rf $(targets) o.* psout* sandbox ckpt.out
+	rm -rf $(targets) o.* psout* sandbox ckpt.out out.* outfile

@@ -29,5 +29,12 @@ if [ $? -ne 0 ]; then
 	exit 2
 fi
 
+echo TEST 3: securebits
+bash run_sbits.sh
+if [ $? -ne 0 ]; then
+	echo 'run_sbits failed'
+	exit 3
+fi
+
 echo 'all tests passed'
 exit 0
