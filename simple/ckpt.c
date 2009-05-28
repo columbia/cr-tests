@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	fprintf(file, "hello, world!\n");
 	fflush(file);
 
-	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, 4);
+	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, 1);
 	if (ret < 0) {
 		perror("checkpoint");
 		exit(2);
