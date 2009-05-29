@@ -19,10 +19,10 @@
 int semid, semid2;
 
 /* create two semaphores, one private, one not */
-void create_sems(void)
+void create_sems(int mode)
 {
-	semid = semget(IPC_PRIVATE, 1, 0600);
-	semid2 = semget(0xabcd10f, 1, IPC_CREAT | 0600);
+	semid = semget(IPC_PRIVATE, 1, mode);
+	semid2 = semget(0xabcd10f, 1, IPC_CREAT | mode);
 	if (semid == -1) {
 		perror("semget IPC_PRIVATE");
 		exit (1);
@@ -48,7 +48,14 @@ int check_sems(void)
 
 void dosetuid(int uid)
 {
-	int ret = setuid(uid);
+	int ret;
+	setgroups(NULL, 0);
+	ret = setgid(uid);
+	if (ret == -1) {
+		perror("setgid");
+		exit(1);
+	}
+	ret = setuid(uid);
 	if (ret == -1) {
 		perror("setuid");
 		exit(1);
@@ -66,9 +73,10 @@ void docreat(char *fnam, int mode)
 
 void usage(char *me)
 {
-	printf("Usage: %s [-e] [-u uid]\n", me);
+	printf("Usage: %s [-e] [-r] [-u uid]\n", me);
 	printf("   if uid is specified, switch to uid after creating sems\n");
 	printf("   if -e is specified, switch to uid before create sems\n");
+	printf("   if -r is specified, use 755 mode to create (default 600)\n");
 	exit(1);
 }
 
@@ -79,6 +87,8 @@ int main(int argc, char *argv[])
 {
 	int uid = -1;
 	int early = 0;
+	int read = 0;
+	int mode = 0600;
 	int c;
 
 	if (!move_to_cgroup("freezer", "1", getpid())) {
@@ -86,10 +96,11 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "eu:")) != -1) {
+	while ((c = getopt(argc, argv, "reu:")) != -1) {
 		switch(c) {
 		case 'u': uid = atoi(optarg); break;
 		case 'e': early = 1; break;
+		case 'r': read = 1; break;
 		default: usage(argv[0]);
 		}
 	}
@@ -103,7 +114,9 @@ int main(int argc, char *argv[])
 	if (early)
 		dosetuid(uid);
 
-	create_sems();
+	if (read)
+		mode = 0755;
+	create_sems(mode);
 
 	close(0);
 	close(1);

@@ -21,15 +21,15 @@ int shmid1, shmid2;
 
 const char *shm_string = "deadbeef";
 
-void create_shms(void)
+void create_shms(int mode)
 {
 	size_t shmsize = strlen(shm_string) + 1;
-	shmid1 = shmget(IPC_PRIVATE, shmsize, 0600);
+	shmid1 = shmget(IPC_PRIVATE, shmsize, mode);
 	if (shmid1 == -1) {
 		perror("shmget IPC_PRIVATE");
 		exit (1);
 	}
-	shmid2 = shmget(0xabcd10f, shmsize, IPC_CREAT | 0600);
+	shmid2 = shmget(0xabcd10f, shmsize, IPC_CREAT | mode);
 	if (shmid2 == -1) {
 		perror("shmget 0xabcd10f");
 		exit (1);
@@ -53,7 +53,14 @@ int check_shms(void)
 
 void dosetuid(int uid)
 {
-	int ret = setuid(uid);
+	int ret;
+	setgroups(NULL, 0);
+	ret = setgid(uid);
+	if (ret == -1) {
+		perror("setgid");
+		exit(1);
+	}
+	ret = setuid(uid);
 	if (ret == -1) {
 		perror("setuid");
 		exit(1);
@@ -71,9 +78,10 @@ void docreat(char *fnam, int mode)
 
 void usage(char *me)
 {
-	printf("Usage: %s [-e] [-u uid]\n", me);
+	printf("Usage: %s [-e] [-r] [-u uid]\n", me);
 	printf("   if uid is specified, switch to uid after creating shms\n");
 	printf("   if -e is specified, switch to uid before create shms\n");
+	printf("   if -r is specified, use 755 mode to create (default 600)\n");
 	exit(1);
 }
 
@@ -84,6 +92,8 @@ int main(int argc, char *argv[])
 {
 	int uid = -1;
 	int early = 0;
+	int read = 0;
+	int mode = 0600;
 	int c;
 
 	if (!move_to_cgroup("freezer", "1", getpid())) {
@@ -91,10 +101,11 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	while ((c = getopt(argc, argv, "eu:")) != -1) {
+	while ((c = getopt(argc, argv, "reu:")) != -1) {
 		switch(c) {
 		case 'u': uid = atoi(optarg); break;
 		case 'e': early = 1; break;
+		case 'r': read = 1; break;
 		default: usage(argv[0]);
 		}
 	}
@@ -108,7 +119,9 @@ int main(int argc, char *argv[])
 	if (early)
 		dosetuid(uid);
 
-	create_shms();
+	if (read)
+		mode = 0755;
+	create_shms(mode);
 
 	close(0);
 	close(1);

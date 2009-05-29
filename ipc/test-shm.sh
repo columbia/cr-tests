@@ -60,4 +60,23 @@ if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
 	exit 1
 fi
+
+# can we recreate root ipc objects as non-root user?
+clean_all
+get_ltp_user
+if [ $uid -eq -1 ]; then
+	echo "not running ltp-uid test"
+	exit 0
+fi
+../ns_exec -ci ./create-shm -r -u $uid &
+do_checkpoint
+chown $uid ckpt.shm
+RSTR=`which rstr`
+setcap cap_sys_admin+pe $RSTR
+cat ckpt.shm | su ltp -c rstr
+if [ -f sandbox/shm-ok ]; then
+	echo "Fail: uid $uid managed to recreate root-owned shms"
+	exit 1
+fi
+setcap -r $RSTR
 echo "PASS"

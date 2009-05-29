@@ -40,3 +40,13 @@ thaw()
 	echo THAWED > ${freezermountpoint}/1/freezer.state
 }
 
+get_ltp_user()
+{
+	awk -F: '{ print $1 '} /etc/passwd | grep "\<ltp\>"
+	if [ $? -ne 0 ]; then
+		echo "I refuse to mess with your password file"
+		echo "please create a user named ltp"
+		uid=-1
+	fi
+	uid=`grep "\<ltp\>" /etc/passwd | awk -F: '{ print $3 '}`
+}

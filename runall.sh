@@ -76,7 +76,16 @@ pushd bashckpt
 bash bash-cr.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
-	echo 5
+	exit 5
+fi
+popd
+
+echo Running ipc tests
+pushd ipc
+bash runtests.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 6
 fi
 popd
 
