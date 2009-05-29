@@ -8,5 +8,11 @@ if [ $? -ne 0 ]; then
 	exit  1
 fi
 
+bash test-shm.sh
+if [ $? -ne 0 ]; then
+	echo shm c/r test failed
+	exit  1
+fi
+
 echo 'all tests passed'
 exit 0
