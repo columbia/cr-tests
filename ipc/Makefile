@@ -1,4 +1,4 @@
-targets = create-sem create-shm
+targets = create-sem create-shm check-mq
 
 SLIBS = ../libcrtest/libcrtest.a
 LIBCMD = -I../libcrtest -L../libcrtest $(SLIBS)
@@ -10,6 +10,9 @@ create-sem: create-sem.c ../clone.h $(SLIBS)
 
 create-shm: create-shm.c ../clone.h $(SLIBS)
 	gcc -o create-shm create-shm.c $(LIBCMD)
+
+check-mq: check-mq.c ../clone.h $(SLIBS)
+	gcc -o check-mq check-mq.c $(LIBCMD)
 
 clean:
 	rm -rf $(targets) o.* ckpt.* sandbox

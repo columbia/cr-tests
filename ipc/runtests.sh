@@ -14,5 +14,11 @@ if [ $? -ne 0 ]; then
 	exit  1
 fi
 
+bash test-mq.sh
+if [ $? -ne 0 ]; then
+	echo mq c/r test failed
+	exit  1
+fi
+
 echo 'all tests passed'
 exit 0
