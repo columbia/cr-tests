@@ -8,23 +8,77 @@ freezermountpoint=/cgroup
 
 CKPT=`which ckpt`
 RSTR=`which rstr`
-MKTREE=`which mktree`
+
+handlesigusr1()
+{
+	echo "FAIL: timed out"
+	exit 1
+}
+
+trap handlesigusr1 SIGUSR1 
+timerpid=0
+
+canceltimer()
+{
+	if [ $timerpid -ne 0 ]; then
+		kill -9 $timerpid > /dev/null 2>&1
+	fi
+}
+
+settimer()
+{
+	(sleep $1; kill -s USR1 $$) &
+	timerpid=`jobs -p | tail -1`
+}
+
+cleanup()
+{
+	killall crcounter > /dev/null 2>&1
+	rm -rf d.* 2>&1
+}
 
 freeze()
 {
-	mkdir ${freezermountpoint}/$1
-	sleep 0.3
-	echo $1 > ${freezermountpoint}/$1/tasks
-	sleep 0.3
-	echo FROZEN > ${freezermountpoint}/$1/freezer.state
+	d="${freezermountpoint}/$1"
+	mkdir $d
+	while [ ! -d $d ]; do : ; done
+	echo $1 > $d/tasks
+	cat $d/tasks > /dev/null # make sure state is updated
+	echo FROZEN > $d/freezer.state
+	cat $d/freezer.state > /dev/null # make sure state is updated
 }
 
 unfreeze()
 {
 	echo THAWED > ${freezermountpoint}/$1/freezer.state
+	cat ${freezermountpoint}/$1/freezer.state > /dev/null
 	echo $1 > ${freezermountpoint}/tasks
-	sleep 0.3
+	cat ${freezermountpoint}/tasks > /dev/null
 	rmdir ${freezermountpoint}/$1
+}
+
+do_checkpoint()
+{
+	pid=$1
+	cnt=$2
+	freeze $pid
+	$CKPT $pid > d.$cnt/ckpt.out
+	unfreeze $pid
+	touch d.$cnt/ckptdone
+}
+
+NUMJOBS=30
+checkchildren()
+{
+	kidsdone=0
+	file=$1
+	for child in `seq 1 $NUMJOBS`; do
+		if [ ! -f d.$child/$1 ]; then
+			return 0
+		fi
+	done
+	kidsdone=1
+	return
 }
 
 # Check freezer mount point
@@ -37,43 +91,59 @@ if [ $? -ne 0 ]; then
 fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
 
-# Make sure no stray counter from another run is still going
-killall crcounter > /dev/null 2>&1
-rm counter_out > /dev/null 2>&1
-
-NUMJOBS=30
+cleanup
 
 echo Starting original set of jobs in parallel
 for i in `seq 1 $NUMJOBS`; do
 	(mkdir -p d.$i; cd d.$i; ../crcounter )&
 done
 
-echo Giving those 5 seconds to start up
-sleep 5
+settimer 5
+echo "Waiting for jobs to start..."
+kidsdone=0
+while [ $kidsdone -eq 0 ]; do checkchildren counter_out; done
+echo "... all jobs started"
+canceltimer
+
 pids=`ps -ef | grep crcounter | grep -v grep | grep -v ns_exec | awk -F\  '{ print $2 '}`
 
 cnt=1
 
-echo pids is $pids
 numjobs=`echo $pids | wc -w`
-echo "Checkpoint all the tasks ($numjobs of them)"
+
+if [ $numjobs -ne $NUMJOBS ]; then
+	echo "FAIL: only $numjobs out of $NUMJOBS original jobs started"
+	exit 1
+fi
+
+echo "Checkpointing all jobs"
 for pid in $pids; do
-	(freeze $pid; sleep 0.3; $CKPT $pid > d.$cnt/ckpt.out; unfreeze $pid) &
+	do_checkpoint $pid $cnt &
 	cnt=$((cnt+1))
 done
 
-sleep 2
+settimer 5
+echo "Waiting for checkpoints..."
+kidsdone=0
+while [ $kidsdone -eq 0 ]; do checkchildren ckptdone; done
+echo "... checkpoints done"
+canceltimer
+
 killall crcounter
+rm -f d.?/counter_out d.??/counter_out
 
 echo Restarting all jobs in parallel
 
 for i in `seq 1 $NUMJOBS`; do
-	(cd d.$i; $MKTREE < ckpt.out) &
+	(cd d.$i; $RSTR < ckpt.out) &
 done
 
-echo Giving those jobs some time to restart...
-
-sleep 5
+settimer 10
+echo "Waiting for jobs to restart (10 second timeout)"
+kidsdone=0
+while [ $kidsdone -eq 0 ]; do checkchildren counter_out; done
+echo All jobs restarted
+canceltimer
 
 numjobs=`ps -ef | grep crcounter | grep -v grep | wc -l`
 killall crcounter
@@ -83,9 +153,8 @@ if [ $numjobs -ne $NUMJOBS ]; then
 	exit 1
 fi
 
+cleanup
 rm -f o.? o.??
-rm -f d.*/counter_out d.*/ckpt.out
-rmdir d.? d.??
 
 echo PASS
 exit 0

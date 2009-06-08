@@ -39,7 +39,6 @@ unfreeze()
 	if [ $ret -ne 0 ]; then
 		echo "failed to freeze, return value $ret"
 	fi
-	echo $1 > ${freezermountpoint}/tasks
 }
 
 # Check freezer mount point
@@ -56,12 +55,14 @@ freezermountpoint=`echo $line | awk '{ print $2 '}`
 killall crcounter
 
 rm counter_out
+rm -rf o.*
 #../ns_exec -m ./crcounter &
 ./crcounter &
-sleep 0.3
+while [ ! -f counter_out ]; do : ; done
 
 NUMLOOPS=50
 
+fail=0
 for cnt in `seq 1 $NUMLOOPS`; do
 	echo Iteration $cnt
 	pid=`pidof crcounter`
@@ -70,21 +71,20 @@ for cnt in `seq 1 $NUMLOOPS`; do
 		exit 1
 	fi
 	freeze $pid
-	sleep 0.3s
 	$CKPT $pid > o.$cnt
 	echo ckpt returned $?
-	unfreeze $pid
 	kill -9 $pid
+	unfreeze $pid
 	#../ns_exec -m $RSTR < ./o.$cnt &
-	sleep 1  # why?  Dunno...
+	wait $pid
+	rm -f counter_out
 	$RSTR < ./o.$cnt &
-	v=$((cnt%25))
-	if [ $v -eq 0 ]; then
-		sleep 4
-	else
-		sleep 1
-	fi
+	while [ ! -f counter_out ]; do : ; done
 done
+
+if [ $fail -ne 0 ]; then
+	echo "WARN there were $fail restart failures"
+fi
 
 numjobs=`ps -ef | grep crcounter | grep -v grep | grep -v ns_exec | wc -l`
 killall crcounter

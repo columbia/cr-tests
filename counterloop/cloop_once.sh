@@ -55,17 +55,15 @@ killall crcounter
 
 rm counter_out
 ../ns_exec -m ./crcounter &
-sleep 1
+while [ ! -f counter_out ]; do : ; done
 pid=`pidof crcounter`
-if [  "x$pid" == "x" ]; then
-	echo FAIL: crcounter is not running.
-	exit 1
-fi
 
 freeze $pid
 pre=`cat counter_out`
 $CKPT $pid > o.1
 unfreeze $pid
+
+echo "sleeping for 7 seconds to let counter_out be incremented"
 sleep 7
 
 freeze $pid
@@ -75,6 +73,8 @@ kill $pid
 
 #../ns_exec -m $usercrdir/rstr < ./o.1 &
 $RSTR < ./o.1 &
+
+echo "sleeping for 4 seconds to inc counter_out by less than last time"
 sleep 4
 killall crcounter
 post=`cat counter_out`
