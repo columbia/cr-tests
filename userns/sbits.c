@@ -4,13 +4,16 @@
  * securebits test
  *
  */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/prctl.h>
+#include <sys/syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sched.h>
-#include <sys/types.h>
-#include <sys/prctl.h>
-#include <sys/syscall.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <libcrtest.h>
 
 #ifndef PR_GET_SECUREBITS
@@ -39,6 +42,17 @@ void usage(char *me)
 	exit(1);
 }
 
+void wait_on_checkpoint(void)
+{
+	struct stat statbuf;
+	int ret;
+
+	while (1) {
+		ret = stat("checkpointed", &statbuf);
+		if (ret == 0)
+			return;
+	}
+}
 
 /*
  * call with -k to set pr_keepcaps
@@ -98,8 +112,8 @@ int main(int argc, char *argv[])
 	fflush(fout);
 	fclose(fout);
 
-	/* sleep once to let us be queried and checkpointed */
-	sleep(3);
+	creat("started", 0755);
+	wait_on_checkpoint();
 
 	/* sleep once to let restarted task be queried */
 	bits = prctl(PR_GET_SECUREBITS);
@@ -108,6 +122,6 @@ int main(int argc, char *argv[])
 	fflush(fout);
 	fclose(fout);
 
-	sleep(6);
+	creat("finished", 0755);
 	exit(0);
 }

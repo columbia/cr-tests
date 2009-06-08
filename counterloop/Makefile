@@ -3,4 +3,4 @@ targets = crcounter
 all: $(targets)
 
 clean:
-	rm -f $(targets)
+	rm -f $(targets) counter_out

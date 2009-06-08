@@ -8,12 +8,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/syscall.h>
 
 #include <libcrtest.h>
 #include "../clone.h"
 
 int clone_newuser;
+#define VALUE "hello world"
 
 void write_status(void)
 {
@@ -39,6 +41,12 @@ void wait_on(char *fnam)
 
 int do_child(void *vargv)
 {
+	long depth = (long) vargv;
+	int ret;
+
+	/* TODO: add checks for keychain here */
+	if (depth)
+		return do_clone(depth);
 	setgid(500);
 	setuid(500);
 	creat("sandbox/started", 0755);
@@ -49,7 +57,7 @@ int do_child(void *vargv)
 	exit(1);
 }
 
-int do_clone()
+int do_clone(long depth)
 {
 	int pid;
 	int stacksize = 4*getpagesize();
@@ -63,7 +71,8 @@ int do_clone()
 	}
 	childstack = stack + stacksize;
 
-	pid = clone(do_child, childstack, flags, NULL);
+	depth--;
+	pid = clone(do_child, childstack, flags, (void *)depth);
 	if (pid == -1) {
 		return -1;
 	}
@@ -83,5 +92,5 @@ int main(int argc, char *argv[])
 	close(1);
 	close(2);
 	close(3);
-	return do_clone();
+	return do_clone(30);
 }

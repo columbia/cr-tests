@@ -2,46 +2,36 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroup"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer freezer /cgroup"
-	exit 1
-fi
-freezermountpoint=`echo $line | awk '{ print $2 '}`
-mkdir $freezermountpoint/1 > /dev/null 2>&1
+source ../common.sh
+verify_freezer
+verify_paths
 
-CKPT=`which ckpt`
-RSTR=`which rstr`
-
-freeze()
+delfiles()
 {
-	echo FROZEN > ${freezermountpoint}/1/freezer.state
-}
-
-thaw()
-{
-	echo THAWED > ${freezermountpoint}/1/freezer.state
+	rm -f started checkpointed finished
 }
 
 do_yer_thang()
 {
-	sleep 1
+	settimer 5
+	while [ ! -f started ]; do : ; done
+	canceltimer
+
 	pid=`pidof sbits`
 	if [ "x$pid" == "x" ]; then
 		echo "FAIL: sbits not running" >> outfile
 		exit 1
 	fi;
 	freeze
-	sleep 0.3
 	$CKPT $pid > out.$pid
 	thaw
 	killall sbits
 	$RSTR < out.$pid &
-	sleep 0.3
-	sleep 3
+	touch checkpointed
+
+	settimer 5
+	while [ ! -f finished ]; do : ; done
+	canceltimer
 	killall sbits
 }
 
@@ -97,21 +87,25 @@ parse_output()
 rm -f outfile
 killall sbits
 # run without changing securebits
+delfiles
 echo "Test 1: no securebits" >> outfile
 ./sbits &
 do_yer_thang
 
 # run with keepcaps set
+delfiles
 echo "Test 2: with keepcaps" >> outfile
 ./sbits -k &
 do_yer_thang
 
 # run with noroot
+delfiles
 echo "Test 3: with noroot" >> outfile
 ./sbits -r &
 do_yer_thang
 
 # run with noroot locked
+delfiles
 echo "Test 4: with noroot locked" >> outfile
 ./sbits -r -l &
 do_yer_thang

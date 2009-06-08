@@ -7,8 +7,6 @@
 freezermountpoint=/cgroup
 
 source ../common.sh
-verify_freezer
-verify_paths
 
 CKPT=`which ckpt`
 RSTR=`which rstr`

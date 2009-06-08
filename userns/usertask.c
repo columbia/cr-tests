@@ -21,50 +21,31 @@
 
 int usage(char *whoami)
 {
-	printf("Usage: %s [-u uid] [-g gid] [-e]\n", whoami);
+	printf("Usage: %s [-u uid] [-g gid]\n", whoami);
 	printf("  uid is the uid to run as.  If unspecified, use 501\n");
 	printf("  gid is the gid to run as.  If unspecified, use 501\n");
-	printf("  -e means wait for an external checkpoint, don't self-checkpoint\n");
-	printf("  if -e is not specified, checkpoint will be written to 'ckpt.out'\n");
 	printf("  output file is always 'outfile'\n");
 	printf("  Since this test must setuid, it must be run as root\n");
 	exit(1);
 }
 
-int do_checkpoint(pid_t pid, int fd)
-{
-	int ret;
-	ret = syscall(__NR_checkpoint, pid, fd, 4);
-	if (ret < 0) {
-		perror("checkpoint");
-		exit(2);
-	}
-	return ret;
-}
-
 #define DIRNAME "./sandbox"
 #define ERRFILE DIRNAME "/error"
-int create_sandbox(int uid, int gid)
+#define OUTFILE DIRNAME "/outfile"
+
+void wait_on(char *fnam)
 {
+	struct stat statbuf;
 	int ret;
 
-	unlink(ERRFILE);
-	ret = mkdir(DIRNAME, 0755);
-	if (ret == -1 && errno != EEXIST) {
-		perror("mkdir");
-		return -1;
+	while (1) {
+		ret = stat(fnam, &statbuf);
+		if (ret == 0)
+			return;
 	}
-
-	ret = chown(DIRNAME, uid, gid);
-	if (ret == -1) {
-		perror("chown");
-		return -1;
-	}
-	return 0;
 }
 
-#define OUTFILE DIRNAME "/outfile"
-#define CKPTFILE DIRNAME "/ckpt.out"
+
 
 int main(int argc, char *argv[])
 {
@@ -73,7 +54,6 @@ int main(int argc, char *argv[])
 	int uid=501, gid=501;
 	int ret = 0;
 	int opt;
-	int external;
 	int fd;
 	int i;
 	int ngrp;
@@ -85,13 +65,10 @@ int main(int argc, char *argv[])
 	unlink("ckpt.out");
 	unlink("outfile");
 
-	while ((opt = getopt(argc, argv, "u:g:e")) != -1) {
+	while ((opt = getopt(argc, argv, "u:g:")) != -1) {
 		switch (opt) {
 		case 'u':
 			uid = atoi(optarg);
-			break;
-		case 'e':
-			external = 1;
 			break;
 		case 'g':
 			gid = atoi(optarg);
@@ -101,13 +78,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (external && !move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", "1", getpid())) {
 		printf("Couldn't switch to cgroup /1\n");
-		exit(1);
-	}
-
-	if (create_sandbox(uid, gid)) {
-		printf("Failed to create user sandbox (%s)\n", DIRNAME);
 		exit(1);
 	}
 
@@ -120,7 +92,6 @@ int main(int argc, char *argv[])
 	setuid(uid);
 
 	unlink(OUTFILE);
-	unlink(CKPTFILE);
 	file = fopen(OUTFILE, "w+");
 	if (!file) {
 		perror("fopen");
@@ -132,27 +103,11 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (!external) {
-		fd = open(CKPTFILE, O_RDWR|O_CREAT);
-		if (fd == -1) {
-			perror("open");
-			exit(1);
-		}
-	}
 
-	fprintf(file, "Starting (before checkpoint)\n");
-	fflush(file);
+	creat("sandbox/started", 0755);
+	wait_on("sandbox/go");
 
-	if (!external)
-		ret = do_checkpoint(pid, fd);
-	else
-		sleep(5);
-
-	if (ret) /* we did a checkpoint */
-		exit(0);
-
-	/* we either did a restart, or we waited on external ckpt */
-	fprintf(file, "here I am, pid %d uid %d gid %d\n", getpid(), getuid(), getegid());
+	fprintf(file, "%d %d\n", getuid(), getegid());
 	ngrp = getgroups(0, NULL);
 	grplist = malloc(ngrp * sizeof(gid_t));
 	getgroups(ngrp, grplist);
@@ -166,11 +121,9 @@ int main(int argc, char *argv[])
 	}
 	fflush(file);
 	fclose(file);
-	sleep(5);
-	sleep(5);
+	creat("sandbox/readytodie", 0755);
+	wait_on("sandbox/die");
 
-	if (d)
-		return 1;
 	return 0;
 }
 

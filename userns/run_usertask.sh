@@ -2,17 +2,10 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroup"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer freezer /cgroup"
-	exit 1
-fi
-freezermountpoint=`echo $line | awk '{ print $2 '}`
-mkdir $freezermountpoint/1 > /dev/null 2>&1
+source ../common.sh
 
+# We are playing with perms on /root, so make sure to clean up
+# on exit
 rootmode=`stat -c %a /root`
 trap '\
 set +eu ; set -x ; \
@@ -21,58 +14,56 @@ chmod $rootmode /root' EXIT
 
 chmod 750 /root
 
-CKPT=`which ckpt`
-MKTREE=`which mktree`
-RSTR=`which rstr`
-
-freeze()
-{
-	echo FROZEN > ${freezermountpoint}/1/freezer.state
-}
-
-thaw()
-{
-	echo THAWED > ${freezermountpoint}/1/freezer.state
-}
-
+rm -rf sandbox
+mkdir sandbox
+chown 501:501 sandbox
+echo "Running usertask"
 killall usertask
-./usertask -e &
-sleep 1
+./usertask &
+settimer 5
+while [ ! -f sandbox/started ]; do : ; done
+canceltimer
 pid=`pidof usertask`
 
 freeze
-sleep 0.3
 $CKPT $pid > ckpt.out
-ps axo uid,euid,gid,comm | grep usertask > psout.1
-echo "fds on original task"
-ls -l /proc/$pid/fd
 thaw
 kill -9 $pid
-sleep 0.3
 $RSTR < ckpt.out &
-sleep 1
-ps axo uid,euid,gid,comm | grep usertask > psout.2
+touch sandbox/go
 
-diff psout.1 psout.2 > /dev/null 2>&1
-ret=$?
-if [ $ret -ne 0 ]; then
-	echo "FAIL - uid/gid were different (see psout.1 and psout.2)"
-	echo "This is a known failure, due to fd0 not being restored"
-	echo "If/when fixed, then exit 1 here"
-	# exit 1
-fi
+settimer 5
+while [ ! -f sandbox/readytodie ]; do : ; done
+canceltimer
 
-# TODO also check /proc/pid/fd/* for proper ownership
-echo "fds on restarted task"
-pid=`pidof usertask`
-ls -l /proc/$pid/fd
-
-killall usertask
+touch sandbox/die
 
 if [ -f sandbox/error ]; then
 	echo "FAIL: unprivileged user read /root"
 	exit 1
 fi
 
-echo PASS
+uid=`head -1 sandbox/outfile|awk '{ print $1 '}`
+gid=`head -1 sandbox/outfile|awk '{ print $2 '}`
+numlines=`wc -l sandbox/outfile | awk '{ print $1 '}`
+numgids=$((numlines-1))
+ok=1
+if [ $uid -ne 501 ]; then
+	echo "wrong uid: $uid instead of 501"
+	ok=0
+fi
+if [ $gid -ne 501 ]; then
+	echo "wrong gid: $gid instead of 501"
+	ok=0
+fi
+if [ $numgids -ne 0 ]; then
+	echo "aux groups not cleared: there were $numgids extra groups"
+	ok=0
+fi
+if [ $ok -ne 1 ]; then
+	echo "FAIL: credentials not properly reset"
+	exit 1
+fi
+
+echo "PASS: credentials reset and unprivileged user could not read /root"
 exit 0

@@ -1,4 +1,4 @@
-targets = userns_ckptme usertask sbits
+targets = userns_ckptme usertask sbits userns_deep
 
 SLIBS = ../libcrtest/libcrtest.a
 LIBCMD = -I../libcrtest -L../libcrtest $(SLIBS)
@@ -14,5 +14,9 @@ usertask: usertask.c $(SLIBS)
 sbits: sbits.c $(SLIBS)
 	gcc -o sbits sbits.c $(LIBCMD)
 
+userns_deep: userns_deep.c $(SLIBS)
+	gcc -o userns_deep userns_deep.c $(LIBCMD)
+
 clean:
 	rm -rf $(targets) o.* psout* sandbox ckpt.out out.* outfile
+	rm -rf checkpointed finished started pidfile

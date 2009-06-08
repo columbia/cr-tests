@@ -29,15 +29,21 @@ verify_paths()
 		exit 1
 	fi
 }
+verify_freezer
+verify_paths
 
 freeze()
 {
-	echo FROZEN > ${freezermountpoint}/1/freezer.state
+	d=${freezermountpoint}/1
+	echo FROZEN > $d/freezer.state
+	cat $d/freezer.state > /dev/null
 }
 
 thaw()
 {
-	echo THAWED > ${freezermountpoint}/1/freezer.state
+	d=${freezermountpoint}/1
+	echo THAWED > $d/freezer.state
+	cat $d/freezer.state > /dev/null
 }
 
 get_ltp_user()
@@ -72,3 +78,19 @@ settimer()
 	(sleep $1; kill -s USR1 $$) &
 	timerpid=`jobs -p | tail -1`
 }
+
+CKPT=`which ckpt`
+if [ $? -ne 0 ]; then
+	echo "BROK: ckpt not found in your path"
+	exit 1
+fi
+RSTR=`which rstr`
+if [ $? -ne 0 ]; then
+	echo "BROK: rstr not found in your path"
+	exit 1
+fi
+MKTREE=`which mktree`
+if [ $? -ne 0 ]; then
+	echo "BROK: mktree not found in your path"
+	exit 1
+fi

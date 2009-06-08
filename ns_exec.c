@@ -24,14 +24,16 @@ static const char* procname;
 
 static void usage(const char *name)
 {
-	printf("usage: %s [-h] [-c] [-muip] [-P <pid-file>]"
+	printf("usage: %s [-h] [-c] [-mnuUip] [-P <pid-file>]"
 			"[command [arg ..]]\n", name);
 	printf("\n");
 	printf("  -h		this message\n");
 	printf("\n");
 	printf("  -c		use 'clone' rather than 'unshare' system call\n");
 	printf("  -m		mount namespace\n");
+	printf("  -n		network namespace\n");
 	printf("  -u		utsname namespace\n");
+	printf("  -U		userid namespace\n");
 	printf("  -i		ipc namespace\n");
 	printf("  -P <pid-file>	File in which to write global pid of cinit\n");
 	printf("  -p		pid namespace\n");
