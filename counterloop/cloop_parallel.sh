@@ -6,30 +6,12 @@
 
 freezermountpoint=/cgroup
 
+source ../common.sh
+verify_freezer
+verify_paths
+
 CKPT=`which ckpt`
 RSTR=`which rstr`
-
-handlesigusr1()
-{
-	echo "FAIL: timed out"
-	exit 1
-}
-
-trap handlesigusr1 SIGUSR1 
-timerpid=0
-
-canceltimer()
-{
-	if [ $timerpid -ne 0 ]; then
-		kill -9 $timerpid > /dev/null 2>&1
-	fi
-}
-
-settimer()
-{
-	(sleep $1; kill -s USR1 $$) &
-	timerpid=`jobs -p | tail -1`
-}
 
 cleanup()
 {
@@ -80,16 +62,6 @@ checkchildren()
 	kidsdone=1
 	return
 }
-
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroup"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer cgroup /cgroup"
-	exit 1
-fi
-freezermountpoint=`echo $line | awk '{ print $2 '}`
 
 cleanup
 

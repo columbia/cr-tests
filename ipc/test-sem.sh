@@ -13,7 +13,9 @@ clean_all() {
 }
 
 do_checkpoint() {
-	sleep 1
+	settimer 2
+	while [ ! -f sandbox/sem-created ]; do : ; done
+	canceltimer
 	freeze
 	pid=`pidof create-sem`
 	if [ "x$pid" == "x" ]; then
@@ -79,4 +81,4 @@ if [ -f sandbox/sem-ok ]; then
 	exit 1
 fi
 setcap -r $RSTR
-echo "PASS"
+echo "PASS: restart failed as it was supposed to"

@@ -50,3 +50,25 @@ get_ltp_user()
 	fi
 	uid=`grep "\<ltp\>" /etc/passwd | awk -F: '{ print $3 '}`
 }
+
+handlesigusr1()
+{
+	echo "FAIL: timed out"
+	exit 1
+}
+
+trap handlesigusr1 SIGUSR1 
+timerpid=0
+
+canceltimer()
+{
+	if [ $timerpid -ne 0 ]; then
+		kill -9 $timerpid > /dev/null 2>&1
+	fi
+}
+
+settimer()
+{
+	(sleep $1; kill -s USR1 $$) &
+	timerpid=`jobs -p | tail -1`
+}

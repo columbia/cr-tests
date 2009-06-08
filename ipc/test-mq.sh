@@ -13,7 +13,9 @@ clean_all() {
 }
 
 do_checkpoint() {
-	sleep 1
+	settimer 2
+	while [ ! -f sandbox/mq-created ]; do : ; done
+	canceltimer
 	freeze
 	pid=`pidof check-mq`
 	if [ "x$pid" == "x" ]; then

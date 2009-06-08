@@ -81,6 +81,7 @@ void usage(char *me)
 }
 
 #define DIRNAME "./sandbox"
+#define SEMCREATED DIRNAME "/sem-created"
 #define FNAME DIRNAME "/sem-ok"
 
 int main(int argc, char *argv[])
@@ -117,6 +118,8 @@ int main(int argc, char *argv[])
 	if (read)
 		mode = 0755;
 	create_sems(mode);
+
+	docreat(SEMCREATED,  S_IRUSR | S_IWUSR);
 
 	close(0);
 	close(1);

@@ -86,6 +86,7 @@ void usage(char *me)
 }
 
 #define DIRNAME "./sandbox"
+#define SHMCREATED DIRNAME "/shm-created"
 #define FNAME DIRNAME "/shm-ok"
 
 int main(int argc, char *argv[])
@@ -122,6 +123,7 @@ int main(int argc, char *argv[])
 	if (read)
 		mode = 0755;
 	create_shms(mode);
+	docreat(SHMCREATED,  S_IRUSR | S_IWUSR);
 
 	close(0);
 	close(1);

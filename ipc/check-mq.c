@@ -24,7 +24,7 @@ int msgid1, msgid2;
 #define MSG2 "message2"
 
 /* create two semaphores, one private, one not */
-void create_sems(void)
+void create_mqs(void)
 {
 	int ret;
 	struct msgbuf *b = malloc(100);
@@ -108,6 +108,7 @@ void usage(char *me)
 }
 
 #define DIRNAME "./sandbox"
+#define MQCREATED DIRNAME "/mq-created"
 #define FNAME DIRNAME "/msq-ok"
 
 int main(int argc, char *argv[])
@@ -138,7 +139,8 @@ int main(int argc, char *argv[])
 	if (early)
 		dosetuid(uid);
 
-	create_sems();
+	create_mqs();
+	docreat(MQCREATED,  S_IRUSR | S_IWUSR);
 
 	close(0);
 	close(1);
