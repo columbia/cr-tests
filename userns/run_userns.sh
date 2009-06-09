@@ -7,12 +7,12 @@ source ../common.sh
 rm -rf sandbox pidfile
 mkdir sandbox
 chown 500:500 sandbox
-./userns_ckptme > pidfile &
+./userns_ckptme &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer
 
-job=`cat pidfile`
+job=`jobs -p|head -1`
 freeze
 echo "Checkpointing job $job"
 $CKPT $job > o.userns

@@ -6,8 +6,7 @@ source ../common.sh
 
 rm -rf sandbox
 mkdir sandbox
-chown 500:500 sandbox
-./userns_deep &
+./simple_deep &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer
@@ -15,12 +14,12 @@ canceltimer
 job=`jobs -p | head -1`
 freeze
 echo "Checkpointing job $job"
-$CKPT $job > o.deep
+$CKPT $job > o.simple
 thaw
-killall userns_deep
+killall simple_deep
 
 echo "Restarting jobs"
-$MKTREE < o.deep &
+$MKTREE < o.simple &
 
 touch sandbox/go
 touch sandbox/die
@@ -29,13 +28,6 @@ echo "Waiting for jobs to restart and complete"
 settimer 5
 while [ ! -f sandbox/status ]; do : ; done
 canceltimer
-
-echo "Verifying uid"
-uid=`tail -1 sandbox/status | awk '{ print $2 '}`
-if [ $uid -ne 500 ]; then
-	echo "FAIL: child was wrong uid ($uid instead of 500)"
-	exit 1
-fi
 
 echo PASS
 exit 0
