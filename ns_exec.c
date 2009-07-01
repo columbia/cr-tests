@@ -30,6 +30,7 @@ static void usage(const char *name)
 	printf("  -h		this message\n");
 	printf("\n");
 	printf("  -c		use 'clone' rather than 'unshare' system call\n");
+	printf("  -g		launch in new cgroup\n");
 	printf("  -m		mount namespace\n");
 	printf("  -n		network namespace\n");
 	printf("  -u		utsname namespace\n");
@@ -104,9 +105,94 @@ opentty(const char * tty) {
 }
 // Code copy end
 
+int do_newcgrp = 0;
+
+int load_cgroup_dir(char *dest, int len)
+{
+	FILE *f = fopen("/proc/mounts", "r");
+	char buf[200];
+	char *name, *path, *fsname, *options, *p1, *p2, *s;
+	if (!f)
+		return 0;
+	while (fgets(buf, 200, f)) {
+		name = strtok_r(buf, " ", &p1);
+		path = strtok_r(NULL, " ", &p1);
+		fsname = strtok_r(NULL, " ", &p1);
+		options = strtok_r(NULL, " ", &p1);
+		if (strcmp(fsname, "cgroup") != 0)
+			continue;
+
+		/* make sure the freezer is composed */
+		s = strtok_r(options, ",", &p2);
+		while (s && strcmp(s, "freezer") != 0)
+			s = strtok_r(NULL, ",", &p2);
+		if (!s)
+			continue;
+		strncpy(dest, path, len);
+		fclose(f);
+		return 1;
+	}
+	fclose(f);
+	printf("Freezer not mounted\n");
+	return 0;
+}
+
+int move_to_new_cgroup(int newcgroup)
+{
+	char cgroupname[150], cgroupbase[100], tasksfname[200];
+	FILE *fout;
+	int ret;
+
+	if (!load_cgroup_dir(cgroupbase, 100))
+		return 0;
+
+	snprintf(cgroupname, 150, "%s/%d", cgroupbase, newcgroup);
+	ret = mkdir(cgroupname, 0755);
+	if (ret)
+		return 0;
+	snprintf(tasksfname, 200, "%s/tasks", cgroupname);
+	fout = fopen(tasksfname, "w");
+	if (!fout)
+		return 0;
+	fprintf(fout, "%d\n", getpid());
+	fclose(fout);
+	return 1;
+}
+
+int pipefd[2];
+
+/* gah. opentty will close the pipefd */
+int check_newcgrp(void)
+{
+	int ret, newgroup;
+	char buf[20];
+
+	if (!do_newcgrp)
+		return 0;
+
+	close(pipefd[1]);
+	ret = read(pipefd[0], buf, 20);
+	close(pipefd[0]);
+	if (ret == -1) {
+		perror("read");
+		return 1;
+	}
+	newgroup = atoi(buf);
+	if (!move_to_new_cgroup(newgroup))
+		return 1;
+	do_newcgrp = 0;
+	return 0;
+}
+
 int do_child(void *vargv)
 {
 	char **argv = (char **)vargv;
+	int ret, newgroup = 0;
+	char buf[20];
+
+	if (check_newcgrp())
+		return 1;
+
 	execve(argv[0], argv, __environ);
 	perror("execve");
 	return 1;
@@ -145,10 +231,11 @@ int main(int argc, char *argv[])
 	memset(ttyname, '\0', sizeof(ttyname));
 	readlink("/proc/self/fd/0", ttyname, sizeof(ttyname));
 
-	while ((c = getopt(argc, argv, "+muUiphcnf:P:")) != EOF) {
+	while ((c = getopt(argc, argv, "+mguUiphcnf:P:")) != EOF) {
 		switch (c) {
-		case 'm': flags |= CLONE_NEWNS;  break;
-		case 'c': use_clone = 1; break;
+		case 'g': do_newcgrp = getpid();		break;
+		case 'm': flags |= CLONE_NEWNS;			break;
+		case 'c': use_clone = 1;			break;
 		case 'P': pid_file = optarg; 			break;
 		case 'u': flags |= CLONE_NEWUTS;		break;
 		case 'i': flags |= CLONE_NEWIPC;		break;
@@ -168,6 +255,15 @@ int main(int argc, char *argv[])
 	argv = &argv[optind];
 	argc = argc - optind;	
 	
+	if (do_newcgrp) {
+		ret = pipe(pipefd);
+		if (ret) {
+			perror("pipe");
+			return -1;
+		}
+		do_newcgrp = pipefd[0];
+	}
+
 	if (use_clone) {
 		int stacksize = 4*getpagesize();
 		void *childstack, *stack = malloc(stacksize);
@@ -189,6 +285,8 @@ int main(int argc, char *argv[])
 			// Child.
 			//print_my_info(procname, ttyname);
 
+			if (check_newcgrp())
+				return 1;
 			opentty(ttyname);
 
 			printf("about to unshare with %lx\n", flags);
@@ -201,6 +299,13 @@ int main(int argc, char *argv[])
 			return do_child((void*)argv);
 		}
 
+	}
+	if (pid != -1 && do_newcgrp) {
+		char buf[20];
+		snprintf(buf, 20, "%d", pid);
+		close(pipefd[0]);
+		write(pipefd[1], buf, strlen(buf)+1);
+		close(pipefd[1]);
 	}
 
 	write_pid(pid_file, pid);
