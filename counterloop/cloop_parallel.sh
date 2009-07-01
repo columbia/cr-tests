@@ -25,7 +25,9 @@ freeze()
 	echo $1 > $d/tasks
 	cat $d/tasks > /dev/null # make sure state is updated
 	echo FROZEN > $d/freezer.state
-	cat $d/freezer.state > /dev/null # make sure state is updated
+	while [ `cat $d/freezer.state` != "FROZEN" ]; do
+		echo FROZEN > $d/freezer.state
+	done
 }
 
 unfreeze()
@@ -101,6 +103,17 @@ canceltimer
 
 killall crcounter
 rm -f d.?/counter_out d.??/counter_out
+
+echo Waiting for all jobs to die
+numjobs=1
+count=0
+while [ $numjobs -ne 0 ]; do
+	numjobs=`ps -ef | grep crcounter | grep -v grep | wc -l`
+	count=$((count+1))
+	if [ $count -gt 20 ]; then
+		killall -9 crcounter
+	fi
+done
 
 echo Restarting all jobs in parallel
 
