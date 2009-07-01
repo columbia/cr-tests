@@ -36,7 +36,9 @@ freeze()
 {
 	d=${freezermountpoint}/1
 	echo FROZEN > $d/freezer.state
-	cat $d/freezer.state > /dev/null
+	while [ `cat $d/freezer.state` != "FROZEN" ]; do
+		echo FROZEN > $d/freezer.state
+	done
 }
 
 thaw()

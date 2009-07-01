@@ -26,9 +26,9 @@ freeze()
 	sleep 0.3
 	echo FROZEN > ${freezermountpoint}/1/freezer.state
 	ret=$?
-	if [ $ret -ne 0 ]; then
-		echo "failed to freeze, return value $ret"
-	fi
+	while [ `cat $freezermountpoint}/1/freezer.state` != "FROZEN" ]; do
+		echo FROZEN > ${freezermountpoint}/1/freezer.state
+	done
 }
 
 unfreeze()
