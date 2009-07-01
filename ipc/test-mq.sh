@@ -35,7 +35,7 @@ do_checkpoint
 rstr < ckpt.msq
 if [ ! -f sandbox/msq-ok ]; then
 	echo "Fail: sysv msq was not re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 
@@ -47,7 +47,7 @@ do_checkpoint
 rstr < ckpt.msq
 if [ -f sandbox/msq-ok ]; then
 	echo "Fail: sysv msq was re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 

@@ -35,7 +35,7 @@ do_checkpoint
 rstr < ckpt.shm
 if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 
@@ -47,7 +47,7 @@ do_checkpoint
 rstr < ckpt.shm
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 

@@ -35,7 +35,7 @@ do_checkpoint
 rstr < ckpt.sem
 if [ ! -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was not re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 
@@ -47,7 +47,7 @@ do_checkpoint
 rstr < ckpt.sem
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was re-created"
-	#exit 1
+	exit 1
 fi
 echo "PASS"
 
