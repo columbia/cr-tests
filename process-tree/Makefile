@@ -10,4 +10,4 @@ LDFLAGS		= $(LIBCRTEST) -lpthread
 all: $(LIBCRTEST) $(targets)
 
 clean:
-	rm -f *.o $(targets)
+	rm -rf *.o $(targets) checkpoint-* input.data log* pid* snap* test-done data.d
