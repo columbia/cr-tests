@@ -49,7 +49,13 @@ for T in ${TESTS[@]} ; do
 	# echo THAWED > /cg/1/freezer.state
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
-	echo "Test ${T} done"
+	retval=$?
+	echo "Test ${T} done, returned $retval"
+	if [ $retval -ne 0 ]; then
+		echo FAIL
+	else
+		echo PASS
+	fi
 	trap "" ERR EXIT
 done
 
