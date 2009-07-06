@@ -107,4 +107,12 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running futex tests
+pushd futex
+bash run.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 8
+fi
+popd
 exit 0
