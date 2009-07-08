@@ -13,8 +13,7 @@ v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 '}`
 if [ "x$v" == "x" ]; then
 	echo "FAIL - ckpt did not put its return value in /tmp/cr-test.out"
 	echo "Chances are sys_checkpoint() failed"
-	echo "NOTE this is a known problem at the moment - self-checkpoint"
-	echo "does not work due to a checkpoint+freezer bug"
+	echo "Please see /tmp/cr-test.out for more details"
 	exit 2
 fi
 if [ ! $v -gt 0 ]; then
