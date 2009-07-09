@@ -293,6 +293,10 @@ int main(int argc, char **argv)
 	pid_t kids[N];
 	int i, excode = EXIT_FAILURE;
 
+	if (!move_to_cgroup("freezer", "1", getpid())) {
+		printf("Failed to move myself to cgroup /1\n");
+		exit(1);
+	}
 	/* FIXME eventually stdio streams should be harmless */
 	close(0);
 	logfp = fopen(LOG_FILE, "w");

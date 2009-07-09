@@ -18,7 +18,7 @@ endif
 #
 # then you probably need a -mFOO option to gcc set in ARCHOPT.
 
-CFLAGS := -Wall $(ARCHOPTS) -I./libfutex -I../
+CFLAGS := -Wall $(ARCHOPTS) -I./libfutex -I../ -I../libcrtest
 
 all: $(PROGS)
 

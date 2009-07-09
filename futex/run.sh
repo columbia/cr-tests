@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -e
+#set -e
+
+source ../common.sh
 
 #
 # Check if the running kernel supports futexes
@@ -20,16 +22,16 @@ if [ -r /proc/config ]; then
 	}
 fi
 
-TESTS=( ./plain ./robust )
+TESTS=( plain robust )
 
 if [ `ulimit -r` -lt 2 ]; then
 	echo "WARNING: Priority inheritance test must be able to set at least two realtime priorities. ulimit -r indicates otherwise so skipping pi futex test(s)."
 else
 	echo "INFO: Priority inheritance tests included."
-	TESTS+=( ./pi )
+	TESTS+=( pi )
 fi
 
-make ${TESTS[@]}
+#make ${TESTS[@]}
 
 # mount -t cgroup foo /cg
 # mkdir /cg/1
@@ -39,27 +41,39 @@ for T in ${TESTS[@]} ; do
 	trap 'break' ERR EXIT
 	rm -f ./checkpoint-*
 	echo "Running test: ${T}"
-	${T} &
+	./${T} &
 	TEST_PID=$!
 	while [ '!' -r "./checkpoint-ready" ]; do
 		sleep 1
 	done
-	# echo FROZEN > /cg/1/freezer.state
-	# ckpt
-	# echo THAWED > /cg/1/freezer.state
+	freeze
+	ckpt $TEST_PID > checkpoint-$T
+	thaw
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
 	retval=$?
 	echo "Test ${T} done, returned $retval"
 	if [ $retval -ne 0 ]; then
 		echo FAIL
+		exit 1
+	else
+		echo PASS
+	fi
+
+	# now try restarting
+	$MKTREE < checkpoint-$T
+	retval=$?
+	echo "Restart of test ${T} done, returned $retval"
+	if [ $retval -ne 0 ]; then
+		echo FAIL
+		exit 1
 	else
 		echo PASS
 	fi
 	trap "" ERR EXIT
 done
 
-rm -f ./checkpoint-*
+#rm -f ./checkpoint-*
 
 # rmdir /cg/1
 # umount /cg
