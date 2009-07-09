@@ -32,7 +32,7 @@ clean_all
 ../ns_exec -ci ./create-sem &
 do_checkpoint
 # Restart it.  If it finds the sem it created, it creates sem-ok
-rstr < ckpt.sem
+$MKTREE < ckpt.sem
 if [ ! -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was not re-created"
 	exit 1
@@ -44,7 +44,7 @@ clean_all
 ../ns_exec -ci ./create-sem -u 501 &
 do_checkpoint
 # restart should fail to create sems
-rstr < ckpt.sem
+$MKTREE < ckpt.sem
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was re-created"
 	exit 1
@@ -57,7 +57,7 @@ clean_all
 ../ns_exec -ci ./create-sem -e -u 501 &
 do_checkpoint
 # restart should be able to create sems
-rstr < ckpt.sem
+$MKTREE < ckpt.sem
 if [ ! -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was not re-created"
 	exit 1
@@ -73,12 +73,11 @@ fi
 ../ns_exec -ci ./create-sem -r -u $uid &
 do_checkpoint
 chown $uid ckpt.sem
-RSTR=`which rstr`
-setcap cap_sys_admin+pe $RSTR
-cat ckpt.sem | su ltp -c rstr
+setcap cap_sys_admin+pe $MKTREE
+cat ckpt.sem | su ltp -c ./mktree.sh ckpt.sem
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned sems"
 	exit 1
 fi
-setcap -r $RSTR
+setcap -r $MKTREE
 echo "PASS: restart failed as it was supposed to"
