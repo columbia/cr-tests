@@ -275,6 +275,7 @@ int main(int argc, char *argv[])
 		childstack = stack + stacksize;
 
 		printf("about to clone with %lx\n", flags);
+		flags |= SIGCHLD;
 		pid = clone(do_child, childstack, flags, (void *)argv);
 		if (pid == -1) {
 			perror("clone");
