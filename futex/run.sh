@@ -61,7 +61,7 @@ for T in ${TESTS[@]} ; do
 	fi
 
 	# now try restarting
-	$MKTREE < checkpoint-$T
+	$MKTREE -p --copy-status < checkpoint-$T
 	retval=$?
 	echo "Restart of test ${T} done, returned $retval"
 	if [ $retval -ne 0 ]; then
