@@ -98,9 +98,9 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
-# these currently fail...
-pushd cr-ipc-test
-bash runtests.sh
+echo Running process-tree tests
+pushd process-tree
+sh runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 7
