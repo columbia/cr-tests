@@ -35,8 +35,8 @@ freeze
 $CKPT `pidof sleeptest` > o.sleep
 thaw
 killall sleeptest
-$RSTR < o.sleep &
-sleep 0.3
+$MKTREE --pids < o.sleep &
+sleep 1
 pidof sleeptest
 if [ $? -ne 0 ]; then
 	echo FAIL: restart failed entirely
@@ -48,7 +48,7 @@ fi
 # then another 0.3 after restart
 # 3 seconds definately should bring us into the second
 # 3-second sleep
-sleep 3
+sleep 1
 
 pidof sleeptest
 if [ $? -ne 0 ]; then
