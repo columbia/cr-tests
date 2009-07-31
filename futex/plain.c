@@ -60,6 +60,11 @@ again:
 				log("INFO", "RESTARTING FUTEX_WAIT (I think I was FROZEN)");
 				goto again;
 			case EAGAIN: /* EWOULDBLOCK */
+				if (atomic_read(test_futex) == 1) {
+					log("INFO", "kid: I was interrupted.\n");
+					log("INFO", "kid: and now test_futex==1, so I'm done\n");
+					break;
+				}
 				log("INFO", "FUTEX_WAIT EAGAIN");
 				goto again;
 				break;
@@ -121,11 +126,6 @@ int main(int argc, char **argv)
 	dup2(fileno(logfp), 1); /* redirect stdout and stderr to the log file */
 	dup2(fileno(logfp), 2);
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		log_error("move_to_cgroup");
-		exit(2);
-	}
-
 	test_futex = alloc_futex_mem(sizeof(*test_futex));
 	if (!test_futex) {
 		log_error("alloc_futex_mem");
@@ -136,10 +136,16 @@ int main(int argc, char **argv)
 	signal(SIGINT, sig_dump);
 	for (i = 0; i < N; i++) {
 		char *new_stack = malloc(SIGSTKSZ*8);
+		if (!new_stack) {
+			i--;
+			break;
+		}
 		kids[i] = clone(kid, new_stack + SIGSTKSZ*8, clone_flags,
 				NULL);
-		if (kids[i] < 0)
+		if (kids[i] < 0) {
+			i--;
 			break;
+		}
 	}
 
 	if (i < N) {
@@ -165,7 +171,8 @@ int main(int argc, char **argv)
 	atomic_set(test_futex, 1);
 	dump("After 1, cleared test_futex, before 2:");
 	i = futex(&test_futex->counter, FUTEX_WAKE, N, NULL, NULL, 0);
-	if (i < N) {
+	if (i == -1) {
+		fprintf(logfp, "futex_wake N=%d returned %d\n", N, i);
 		log_error("FUTEX_WAKE");
 		sleep(1); /* wait for all woken tasks to exit quietly */
 
