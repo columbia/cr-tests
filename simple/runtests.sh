@@ -22,7 +22,7 @@ if [ ! $v -gt 0 ]; then
 fi
 
 $RSTR < out
-v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 '}`
+v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 }'`
 if [ "x$v" == "x" ]; then
 	echo "FAIL - rstrt return value was not in /tmp/cr-test.out"
 	exit 4
