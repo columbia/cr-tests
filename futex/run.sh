@@ -37,9 +37,13 @@ fi
 # mkdir /cg/1
 # chown -R $(id --name -u).$(id --name -g) /cg/1
 
-for T in ${TESTS[@]} ; do
+NUMTESTS=${#TESTS[@]}
+CURTEST=0
+
+while [ $CURTEST -lt $NUMTESTS ]; do
+	T=${TESTS[$CURTEST]}
 	trap 'break' ERR EXIT
-	rm -f ./checkpoint-*
+	rm -f ./checkpoint-* TBROK
 	echo "Running test: ${T}"
 	./${T} &
 	TEST_PID=$!
@@ -53,6 +57,10 @@ for T in ${TESTS[@]} ; do
 	wait ${TEST_PID}
 	retval=$?
 	echo "Test ${T} done, returned $retval"
+	if [ -f "TBROK" ]; then
+		echo "BROK: Futex snafu, re-running this test"
+		continue
+	fi
 	if [ $retval -ne 0 ]; then
 		echo FAIL
 		exit 1
@@ -71,6 +79,7 @@ for T in ${TESTS[@]} ; do
 		echo PASS
 	fi
 	trap "" ERR EXIT
+	CURTEST=$((CURTEST+1))
 done
 
 #rm -f ./checkpoint-*

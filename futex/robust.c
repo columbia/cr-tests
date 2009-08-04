@@ -103,10 +103,11 @@ void add_rfutex(struct futex *rf)
 
 void acquire_rfutex(struct futex *rf, pid_t tid)
 {
-	int val = 0;
+	int oldval, newval, val = 0;
 
 	rlist.list_op_pending = &rf->rlist; /* ARCH TODO make sure this assignment is atomic */
 
+	oldval = atomic_read(&rf->tid);
 	tid = tid & FUTEX_TID_MASK;
 	do {
 		val = atomic_cmpxchg(&rf->tid, 0, tid);
@@ -134,6 +135,13 @@ void acquire_rfutex(struct futex *rf, pid_t tid)
 				continue;
 			case EAGAIN:
 				log("WARN", "EAGAIN while sleeping on futex\n");
+				newval = atomic_read(&rf->tid);
+				if (newval != oldval) {
+					int ret = creat("TBROK", 0755);
+					if (ret == -1)
+						fail++;
+					return;
+				}
 				continue;
 			case EINTR:
 				log("WARN", "EINTR while sleeping on futex\n");
