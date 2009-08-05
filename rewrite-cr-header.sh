@@ -1,6 +1,9 @@
 #!/bin/bash
 #
-# Rewrite the contents of cr.h
+# Copyright 2009 IBM Corp.
+# Author: Matt Helsley <matthltc@us.ibm.com>
+#
+# Sanitize checkpoint/restart kernel headers for userspace.
 #
 
 KERNELSRC=../oren
