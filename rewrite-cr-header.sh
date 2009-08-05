@@ -6,11 +6,40 @@
 # Sanitize checkpoint/restart kernel headers for userspace.
 #
 
-KERNELSRC=../oren
+function usage()
+{
+	echo "Usage: $0 [-h|--help] -s|--kernel-src=DIR"
+}
+
+OPTIONS=`getopt -o s:o:h --long kernel-src:,output:,help -- "$@"`
+eval set -- "${OPTIONS}"
+while true ; do
+	case "$1" in
+	-s|--kernel-src)
+		KERNELSRC="$2"
+		shift 2 ;;
+	-h|--help)
+		usage
+		exit 0 ;;
+	--)
+		shift
+		break ;;
+	*)
+		echo "Unknown option: $1"
+		shift
+		echo "Unparsed options: $@"
+		usage 1>&2
+		exit 2 ;;
+	esac
+done
+
+if [ -z "${KERNELSRC}" -o '!' -d "${KERNELSRC}" ]; then
+	usage 1>&2
+	exit 2
+fi
 
 ################################################################################
 
-[ -z "${KERNELSRC}" ] && exit -1
 mv cr.h cr.h.bak || exit -1
 
 (
