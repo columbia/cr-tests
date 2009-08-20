@@ -95,7 +95,7 @@ again:
 
 void dump (const char *prefix)
 {
-	fprintf(logfp, "%s children past 1: %d\t children past 2: %d\t futex: %d\n",
+	log("INFO","%s children past 1: %d\t children past 2: %d\t futex: %d\n",
 	       prefix,
 	       atomic_read(&dumb_barrier[0]),
 	       atomic_read(&dumb_barrier[1]),
