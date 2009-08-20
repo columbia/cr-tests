@@ -67,6 +67,8 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	done
 	freeze
 	trap 'thaw; do_err; break' ERR EXIT
+	sync
+	cp log.${T} log.${T}.pre-ckpt
 	err_msg="FAIL"
 	ckpt ${TEST_PID} > checkpoint-${T}
 	err_msg="BROK"
@@ -86,6 +88,8 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	echo PASS
 
 	# now try restarting
+	mv log.${T} log.${T}.post-ckpt
+	cp log.${T}.pre-ckpt log.${T}
 	err_msg="FAIL"
 	# We need to pass -p to mktree since futexes often store the
 	# pid of the task that owns the futex in the futex, even in
@@ -94,6 +98,9 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	${MKTREE} -p --copy-status < checkpoint-${T}
 	retval=$?
 	err_msg="BROK"
+	mv log.${T} log.${T}.post-rstr
+	# Now we can do something _like_:
+	#         diff log.${T}.post-ckpt log.${T}.post-rstr
 	echo "Restart of test ${T} done, returned $retval"
 	err_msg="FAIL"
 	[ $retval -eq 0 ];
