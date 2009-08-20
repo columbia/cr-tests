@@ -51,7 +51,7 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 		sleep 1
 	done
 	freeze
-	ckpt $TEST_PID > checkpoint-$T
+	ckpt ${TEST_PID} > checkpoint-${T}
 	thaw
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
@@ -69,7 +69,7 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	fi
 
 	# now try restarting
-	$MKTREE -p --copy-status < checkpoint-$T
+	${MKTREE} -p --copy-status < checkpoint-${T}
 	retval=$?
 	echo "Restart of test ${T} done, returned $retval"
 	if [ $retval -ne 0 ]; then
