@@ -259,13 +259,14 @@ int kid(int i)
 {
 	if (set_robust_list(&rlist, sizeof(rlist)) < 0) {
 		log_error("set_robust_list");
-		fail++;
 		send_parent_status(&children_ready[1], CHILD_ERROR);
-		return -1;
+		fail++;
+		goto do_exit;
 	}
 	if (check_rlist(i) != 0) {
 		send_parent_status(&children_ready[1], CHILD_ERROR);
-		return -1;
+		fail++;
+		goto do_exit;
 	}
 
 	log("INFO", "signaling ready for checkpointing\n");
@@ -274,18 +275,20 @@ int kid(int i)
 
 	if (check_rlist(i) != 0) {
 		send_parent_status(&children_ready[1], CHILD_ERROR);
-		return -1;
+		fail++;
+		goto do_exit;
 	}
 
 	send_parent_status(&children_ready[1], CHILD_READY);
 	acquire_rfutex(test_futex, gettid());
+	pass++;
 
 	/*
 	 * Now exit instead of releasing the futex. This should cause
 	 * the kernel to wake the next waiter with FUTEX_OWNER_DIED.
 	 */
+do_exit:
 	log("INFO", "exiting\n");
-	pass++;
 	if (pass && !fail)
 		exit(EXIT_SUCCESS);
 	exit(EXIT_FAILURE);
