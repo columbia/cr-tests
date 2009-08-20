@@ -100,10 +100,13 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	echo PASS
 	trap '' ERR EXIT
 	CURTEST=$((CURTEST+1))
+
+	# Wait for restarted tasks to complete.
+	wait
 done
 trap '' ERR EXIT
 
-#rm -f ./checkpoint-*
+rm -f ./checkpoint-{ready,done}
 
 # rmdir /cg/1
 # umount /cg
