@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -e
+set -e
 
 source ../common.sh
 
@@ -80,23 +80,24 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 		echo "BROK: Futex snafu, re-running this test"
 		continue
 	fi
-	if [ $retval -ne 0 ]; then
-		echo FAIL
-		exit 1
-	else
-		echo PASS
-	fi
+	err_msg="FAIL"
+	[ $retval -eq 0 ]
+	err_msg="BROK"
+	echo PASS
 
 	# now try restarting
+	err_msg="FAIL"
+	# We need to pass -p to mktree since futexes often store the
+	# pid of the task that owns the futex in the futex, even in
+	# the uncontended cases where the kernel is entirely unaware
+	# of the futex. --copy-status ensures that we trap on error.
 	${MKTREE} -p --copy-status < checkpoint-${T}
 	retval=$?
+	err_msg="BROK"
 	echo "Restart of test ${T} done, returned $retval"
-	if [ $retval -ne 0 ]; then
-		echo FAIL
-		exit 1
-	else
-		echo PASS
-	fi
+	err_msg="FAIL"
+	[ $retval -eq 0 ];
+	echo PASS
 	trap '' ERR EXIT
 	CURTEST=$((CURTEST+1))
 done
@@ -106,3 +107,5 @@ trap '' ERR EXIT
 
 # rmdir /cg/1
 # umount /cg
+
+exit ${failed}
