@@ -110,7 +110,7 @@ void sig_dump(int signum)
 int main(int argc, char **argv)
 {
 	pid_t kids[N];
-	int i, num_killed = 0;
+	int i, num_killed = 0, excode = EXIT_FAILURE;
 
 	/* FIXME eventually stdio streams should be harmless */
 	close(0);
@@ -180,11 +180,12 @@ int main(int argc, char **argv)
 		if (num_killed)
 			log("INFO", "killed %d remaining child tasks.\n",
 				num_killed);
-	}
+	} else
+		excode = EXIT_SUCCESS;
 	dump("After 2:");
 
 	do_wait(N);
 	dump("After 3:");
 	fclose(logfp);
-	exit(0);
+	exit(excode);
 }
