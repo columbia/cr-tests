@@ -37,12 +37,27 @@ fi
 # mkdir /cg/1
 # chown -R $(id --name -u).$(id --name -g) /cg/1
 
+# Most failures indicate a broken test environment
+err_msg="BROK"
+function do_err()
+{
+	if [ -n "${TEST_PID}" ]; then
+		local PIDLIST=( $(ps --ppid ${TEST_PID} -o pid=) ${TEST_PID} )
+		kill ${PIDLIST[@]}
+	fi
+	echo "${err_msg}"
+	((failed++))
+	wait
+}
+
+failed=0
+
 NUMTESTS=${#TESTS[@]}
 CURTEST=0
 
 while [ $CURTEST -lt $NUMTESTS ]; do
 	T=${TESTS[$CURTEST]}
-	trap 'break' ERR EXIT
+	trap 'do_err; break' ERR EXIT
 	rm -f ./checkpoint-* TBROK
 	echo "Running test: ${T}"
 	./${T} &
@@ -51,8 +66,12 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 		sleep 1
 	done
 	freeze
+	trap 'thaw; do_err; break' ERR EXIT
+	err_msg="FAIL"
 	ckpt ${TEST_PID} > checkpoint-${T}
+	err_msg="BROK"
 	thaw
+	trap 'do_err; break' ERR EXIT
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
 	retval=$?
@@ -78,9 +97,10 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	else
 		echo PASS
 	fi
-	trap "" ERR EXIT
+	trap '' ERR EXIT
 	CURTEST=$((CURTEST+1))
 done
+trap '' ERR EXIT
 
 #rm -f ./checkpoint-*
 
