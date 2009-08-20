@@ -103,6 +103,10 @@ void add_rfutex(struct futex *rf)
 
 void acquire_rfutex(struct futex *rf, pid_t tid)
 {
+	struct timespec timeout = {
+		.tv_sec = 5,
+		.tv_nsec = 0
+	};
 	int oldval, newval, val = 0;
 
 	rlist.list_op_pending = &rf->rlist; /* ARCH TODO make sure this assignment is atomic */
@@ -126,7 +130,7 @@ void acquire_rfutex(struct futex *rf, pid_t tid)
 		val = __sync_or_and_fetch(&rf->tid.counter, FUTEX_WAITERS);
 		log("INFO", "futex(FUTEX_WAIT, %x)\n", val);
 		if (futex(&rf->tid.counter, FUTEX_WAIT, val,
-			  NULL, NULL, 0) == 0)
+			  &timeout, NULL, 0) == 0)
 			break;
 		log("INFO", "futex returned with errno %d (%s).\n", errno, strerror(errno));
 		switch(errno) {
@@ -147,8 +151,9 @@ void acquire_rfutex(struct futex *rf, pid_t tid)
 				log("WARN", "EINTR while sleeping on futex\n");
 				continue;
 			case ETIMEDOUT:
-				log("WARN", "ETIMEDOUT while sleeping on futex\n");
-				continue;
+				log("FAIL", "ETIMEDOUT while sleeping on futex.\n");
+				fail++;
+				return;
 			case EACCES:
 				log("FAIL", "FUTEX_WAIT EACCES - no read access to futex memory\n");
 				fail++;
