@@ -347,7 +347,7 @@ int main(int argc, char **argv)
 			  MAP_ANONYMOUS|MAP_SHARED, -1, 0);
 	if (test_futex == MAP_FAILED) {
 		log_error("mmap shared futex");
-		goto exit_pipes;
+		goto exit_pipe;
 	}
 
 	/* Should already be zero but let's be clear about that. */
@@ -356,7 +356,7 @@ int main(int argc, char **argv)
 
 	if (set_robust_list(&rlist, sizeof(rlist))) {
 		log_error("set_robust_list");
-		goto exit_pipes;
+		goto exit_pipe;
 	}
 	check_rlist(0);
 
@@ -384,10 +384,9 @@ int main(int argc, char **argv)
 		log("INFO", "killing %d child tasks.\n", i);
 		for (; --i > -1;)
 			kill(kids[i], SIGTERM);
-		goto exit_pipes;
+		goto exit_pipe;
 	}
 
-	close(children_ready[1]);
 	do {
 		char status;
 
@@ -398,7 +397,6 @@ int main(int argc, char **argv)
 		else
 			fail++;
 	} while (pass + fail < N);
-	close(children_ready[0]);
 
 	/* Now that all the children are waiting on the futex, wake one. */
 	log("INFO", "Parent waking one child\n");
@@ -408,7 +406,7 @@ int main(int argc, char **argv)
 	log("INFO", "Parent exiting.\n");
 	if (pass && !fail)
 		excode = EXIT_SUCCESS;
-exit_pipes:
+exit_pipe:
 	close(children_ready[0]);
 	close(children_ready[1]);
 exit_logs:
