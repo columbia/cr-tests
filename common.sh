@@ -8,7 +8,7 @@ verify_freezer()
 		exit 1
 	fi
 	freezermountpoint=`echo $line | awk '{ print $2 '}`
-	mkdir $freezermountpoint/1 > /dev/null 2>&1
+	mkdir -p $freezermountpoint/1 > /dev/null 2>&1
 }
 
 verify_paths()
