@@ -55,8 +55,9 @@ get_ltp_user()
 		echo "I refuse to mess with your password file"
 		echo "please create a user named ltp"
 		uid=-1
+	else
+		uid=`grep "\<ltp\>" /etc/passwd | awk -F: '{ print $3 }'`
 	fi
-	uid=`grep "\<ltp\>" /etc/passwd | awk -F: '{ print $3 }'`
 }
 
 handlesigusr1()
