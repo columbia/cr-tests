@@ -1,0 +1,7 @@
+This test is only for smack-enabled kernels.  It does a few
+sanity checks to test whether task contexts are properly
+restored, are restored only if requested, and ar restored only
+if permitted.
+
+Restoration of smack labels on other objects (esp. ipc objects)
+remains a TODO.

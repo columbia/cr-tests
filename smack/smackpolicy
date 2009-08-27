@@ -1,0 +1,6 @@
+vs1 _ rwax
+_ vs1 rwax
+vs2 vs1 rwax
+vs1 vs2 rwax
+vs2 _ rwax
+_ vs2 rwax
