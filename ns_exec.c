@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
 			perror("malloc");
 			return -1;
 		}
-		childstack = stack + stacksize;
+		childstack = stack + stacksize - 1;
 
 		printf("about to clone with %lx\n", flags);
 		flags |= SIGCHLD;
