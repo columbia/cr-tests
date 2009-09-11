@@ -5,8 +5,8 @@
 freezermountpoint=/cgroup
 CHECKPOINT="../"
 NS_EXEC="../ns_exec"
-CR=`which ckpt`
-RSTR=`which rstr`
+CR=`which checkpoint`
+RSTR=`which restart`
 
 SLOW_DOWN="slow-down-fileio"
 CKPT_FILE="ckpt-fileio1";

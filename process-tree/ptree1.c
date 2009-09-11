@@ -176,7 +176,7 @@ main(int argc, char *argv[])
 		}
 	};
 
-	close(0);close(1);close(2);
+	for (i=0; i<100; i++) close(i);
 
 	create_children(1, id_str);
 

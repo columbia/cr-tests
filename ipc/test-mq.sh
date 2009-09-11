@@ -22,7 +22,7 @@ do_checkpoint() {
 		echo "failed to execute testcase"
 		exit 2
 	fi
-	ckpt $pid > ckpt.msq
+	${CHECKPOINT} $pid > ckpt.msq
 	thaw
 	killall check-mq
 }
@@ -32,7 +32,7 @@ clean_all
 ../ns_exec -ci ./check-mq &
 do_checkpoint
 # Restart it.  If it finds the msq it created, it creates msq-ok
-$MKTREE < ckpt.msq
+$RESTART < ckpt.msq
 if [ ! -f sandbox/msq-ok ]; then
 	echo "Fail: sysv msq was not re-created"
 	exit 1
@@ -44,7 +44,7 @@ clean_all
 ../ns_exec -ci ./check-mq -u 501 &
 do_checkpoint
 # restart should fail to create msq
-$MKTREE < ckpt.msq
+$RESTART < ckpt.msq
 if [ -f sandbox/msq-ok ]; then
 	echo "Fail: sysv msq was re-created"
 	exit 1
@@ -57,7 +57,7 @@ clean_all
 ../ns_exec -ci ./check-mq -e -u 501 &
 do_checkpoint
 # restart should be able to create msq
-$MKTREE < ckpt.msq
+$RESTART < ckpt.msq
 if [ ! -f sandbox/msq-ok ]; then
 	echo "Fail: sysv msq was not re-created"
 	exit 1

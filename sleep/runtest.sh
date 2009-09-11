@@ -13,9 +13,8 @@ fi
 freezermountpoint=`echo $line | awk '{ print $2 '}`
 mkdir $freezermountpoint/1 > /dev/null 2>&1
 
-MKTREE=`which mktree`
-CKPT=`which ckpt`
-RSTR=`which rstr`
+RESTART=`which restart`
+CHECKPOINT=`which checkpoint`
 
 freeze()
 {
@@ -32,10 +31,10 @@ killall sleeptest > /dev/null 2>&1
 ./sleeptest &
 sleep 1
 freeze
-$CKPT `pidof sleeptest` > o.sleep
+$CHECKPOINT `pidof sleeptest` > o.sleep
 thaw
 killall sleeptest
-$MKTREE --pids < o.sleep &
+$RESTART --pids < o.sleep &
 sleep 1
 pidof sleeptest
 if [ $? -ne 0 ]; then

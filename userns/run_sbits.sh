@@ -23,10 +23,10 @@ do_yer_thang()
 		exit 1
 	fi;
 	freeze
-	$CKPT $pid > out.$pid
+	$CHECKPOINT $pid > out.$pid
 	thaw
 	killall sbits
-	$RSTR < out.$pid &
+	$RESTART < out.$pid &
 	touch checkpointed
 
 	settimer 5

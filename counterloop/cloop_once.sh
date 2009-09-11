@@ -6,8 +6,8 @@
 
 freezermountpoint=/cgroup
 
-CKPT=`which ckpt`
-RSTR=`which rstr`
+CHECKPOINT=`which checkpoint`
+RESTART=`which restart`
 
 DEBUG=0
 my_debug()
@@ -59,7 +59,7 @@ pid=`pidof crcounter`
 
 freeze $pid
 pre=`cat counter_out`
-$CKPT $pid > o.1
+$CHECKPOINT $pid > o.1
 unfreeze $pid
 
 echo "sleeping for 7 seconds to let counter_out be incremented"
@@ -70,8 +70,8 @@ prekill=`cat counter_out`
 unfreeze $pid
 kill $pid
 
-#../ns_exec -m $usercrdir/rstr < ./o.1 &
-$RSTR < ./o.1 &
+#../ns_exec -m $usercrdir/restart < ./o.1 &
+$RESTART < ./o.1 &
 
 echo "sleeping for 4 seconds to inc counter_out by less than last time"
 sleep 4

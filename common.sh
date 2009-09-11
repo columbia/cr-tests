@@ -13,19 +13,14 @@ verify_freezer()
 
 verify_paths()
 {
-	which ckpt > /dev/null 2>&1
+	which checkpoint > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo "BROK: ckpt not in path"
+		echo "BROK: checkpoint not in path"
 		exit 1
 	fi
-	which rstr > /dev/null 2>&1
+	which restart > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo "BROK: rstr not in path"
-		exit 1
-	fi
-	which mktree > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo "BROK: mktree not in path"
+		echo "BROK: restart not in path"
 		exit 1
 	fi
 }
@@ -82,18 +77,13 @@ settimer()
 	timerpid=`jobs -p | tail -1`
 }
 
-CKPT=`which ckpt`
+CHECKPOINT=`which checkpoint`
 if [ $? -ne 0 ]; then
-	echo "BROK: ckpt not found in your path"
+	echo "BROK: checkpoint not found in your path"
 	exit 1
 fi
-RSTR=`which rstr`
+RESTART=`which restart`
 if [ $? -ne 0 ]; then
-	echo "BROK: rstr not found in your path"
-	exit 1
-fi
-MKTREE=`which mktree`
-if [ $? -ne 0 ]; then
-	echo "BROK: mktree not found in your path"
+	echo "BROK: restart not found in your path"
 	exit 1
 fi

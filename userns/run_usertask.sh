@@ -26,10 +26,10 @@ canceltimer
 pid=`pidof usertask`
 
 freeze
-$CKPT $pid > ckpt.out
+$CHECKPOINT $pid > ckpt.out
 thaw
 kill -9 $pid
-$RSTR < ckpt.out &
+$RESTART < ckpt.out &
 touch sandbox/go
 
 settimer 5

@@ -7,9 +7,8 @@ CHECKPOINT=".."
 #	test to fail with "container not isolated" message due to the
 #	log-file being shared between the application threads.
 #
-CR="`which ckpt` --container"
-RSTR=`which rstr`
-MKTREE=`which mktree`
+CHECKPOINT="`which checkpoint` --container"
+RESTART=`which restart`
 ECHO="/bin/echo -e"
 
 TEST_CMD="./pthread1"
@@ -58,8 +57,8 @@ checkpoint()
 {
 	local pid=$1
 
-	$ECHO "Checkpoint: $CR $pid \> $CHECKPOINT_FILE"
-	$CR $pid > $CHECKPOINT_FILE
+	$ECHO "Checkpoint: $CHECKPOINT $pid \> $CHECKPOINT_FILE"
+	$CHECKPOINT $pid > $CHECKPOINT_FILE
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		$ECHO "***** FAIL: Checkpoint of $pid failed"
@@ -106,7 +105,7 @@ function restart_container
 {
 	local ret;
 
-	cmdline="$MKTREE --pids --pidns --wait"
+	cmdline="$RESTART --pids --pidns --wait"
 	$ECHO "\t- $cmdline"
 
 	sleep 1
@@ -209,10 +208,10 @@ while [ $cnt -lt 15 ]; do
 	$ECHO "\t- num_pids1 $num_pids1, num_pids2 $num_pids2";
 
 	# ns_exec pid is parent-pid of restarted-container-init
-	nspid=`pidof mktree`
+	nspid=`pidof restart`
 
 	if [ "x$nspid" == "x" ]; then
-		$ECHO "***** FAIL: Can't find pid of $MKTREE"
+		$ECHO "***** FAIL: Can't find pid of $RESTART"
 		exit 1;
 	fi
 	

@@ -2,25 +2,19 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-which ckpt > /dev/null 2>&1
+which checkpoint > /dev/null 2>&1
 if [ $? -ne 0 ]; then
 	echo Please place ckpt from user-cr in your PATH
 	exit 1
 fi
-which rstr > /dev/null 2>&1
+which restart > /dev/null 2>&1
 if [ $? -ne 0 ]; then
 	echo Please place rstr from user-cr in your PATH
 	exit 1
 fi
-which mktree > /dev/null 2>&1
-if [ $? -ne 0 ]; then
-	echo Please place mktree from user-cr in your PATH
-	exit 1
-fi
 
-export CKPT=`which ckpt`
-export MKTREE=`which mktree`
-export RSTR=`which rstr`
+export CHECKPOINT=`which checkpoint`
+export RESTART=`which restart`
 
 line=`grep freezer /proc/mounts`
 if [ $? -ne 0 ]; then

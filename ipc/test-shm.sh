@@ -22,7 +22,7 @@ do_checkpoint() {
 		echo "failed to execute testcase"
 		exit 2
 	fi
-	ckpt $pid > ckpt.shm
+	${CHECKPOINT} $pid > ckpt.shm
 	thaw
 	killall create-shm
 }
@@ -32,7 +32,7 @@ clean_all
 ../ns_exec -ci ./create-shm &
 do_checkpoint
 # Restart it.  If it finds the shm it created, it creates shm-ok
-$MKTREE < ckpt.shm
+$RESTART < ckpt.shm
 if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
 	exit 1
@@ -44,7 +44,7 @@ clean_all
 ../ns_exec -ci ./create-shm -u 501 &
 do_checkpoint
 # restart should fail to create shm
-$MKTREE < ckpt.shm
+$RESTART < ckpt.shm
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was re-created"
 	exit 1
@@ -57,7 +57,7 @@ clean_all
 ../ns_exec -ci ./create-shm -e -u 501 &
 do_checkpoint
 # restart should be able to create shm
-$MKTREE < ckpt.shm
+$RESTART < ckpt.shm
 if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
 	exit 1
@@ -73,11 +73,11 @@ fi
 ../ns_exec -ci ./create-shm -r -u $uid &
 do_checkpoint
 chown $uid ckpt.shm
-setcap cap_sys_admin+pe $MKTREE
+setcap cap_sys_admin+pe $RESTART
 cat ckpt.shm | su ltp -c ./mktree.sh
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned shms"
 	exit 1
 fi
-setcap -r $MKTREE
+setcap -r $RESTART
 echo "PASS: restart failed as it was supposed to"

@@ -3,9 +3,8 @@
 freezermountpoint=/cgroup
 BASE_DIR=".."
 
-CR=`which ckpt`
-RSTR=`which rstr`
-MKTREE=`which mktree`
+CHECKPOINT=`which checkpoint`
+RESTART=`which restart`
 FILEIO="../fileio/fileio1"
 
 ECHO="/bin/echo -e"
@@ -60,8 +59,8 @@ checkpoint()
 {
 	local pid=$1
 
-	$ECHO "Checkpoint: $CR $pid \> $CHECKPOINT_FILE"
-	$CR $pid > $CHECKPOINT_FILE
+	$ECHO "Checkpoint: $CHECKPOINT $pid \> $CHECKPOINT_FILE"
+	$CHECKPOINT $pid > $CHECKPOINT_FILE
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		$ECHO "***** FAIL: Checkpoint of $pid failed"
@@ -108,7 +107,7 @@ function restart_container
 {
 	local ret;
 
-	cmdline="$MKTREE --pids --pidns --wait"
+	cmdline="$RESTART --pids --pidns --wait"
 	$ECHO "\t- $cmdline"
 
 	sleep 1
@@ -229,10 +228,10 @@ while [ $cnt -lt 15 ]; do
 	$ECHO "\t- num_pids1 $num_pids1, num_pids2 $num_pids2";
 
 	# ns_exec pid is parent-pid of restarted-container-init
-	nspid=`pidof mktree`
+	nspid=`pidof restart`
 
 	if [ "x$nspid" == "x" ]; then
-		$ECHO "***** FAIL: Can't find pid of $MKTREE"
+		$ECHO "***** FAIL: Can't find pid of $RESTART"
 		exit 1;
 	fi
 	

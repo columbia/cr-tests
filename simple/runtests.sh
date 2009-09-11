@@ -2,7 +2,7 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-RSTR=`which rstr`
+RESTART=`which restart`
 
 ./ckpt > out
 if [ ! -f /tmp/cr-test.out ]; then
@@ -21,14 +21,14 @@ if [ ! $v -gt 0 ]; then
 	exit 3
 fi
 
-$RSTR < out
+$RESTART < out
 v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 }'`
 if [ "x$v" == "x" ]; then
-	echo "FAIL - rstrt return value was not in /tmp/cr-test.out"
+	echo "FAIL - restart return value was not in /tmp/cr-test.out"
 	exit 4
 fi
 if [ $v -ne 0 ]; then
-	echo "FAIL - rstrt return value was $v, should be == 0"
+	echo "FAIL - restart return value was $v, should be == 0"
 	exit 5
 fi
 echo PASS

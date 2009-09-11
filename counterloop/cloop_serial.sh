@@ -7,9 +7,8 @@
 
 freezermountpoint=/cgroup
 
-CKPT=`which ckpt`
-RSTR=`which rstr`
-MKTREE=`which mktree`
+CHECKPOINT=`which checkpoint`
+RESTART=`which restart`
 
 DEBUG=0
 debug()
@@ -71,14 +70,14 @@ for cnt in `seq 1 $NUMLOOPS`; do
 		exit 1
 	fi
 	freeze $pid
-	$CKPT $pid > o.$cnt
-	echo ckpt returned $?
+	$CHECKPOINT $pid > o.$cnt
+	echo checkpoint returned $?
 	kill -9 $pid
 	unfreeze $pid
-	#../ns_exec -m $RSTR < ./o.$cnt &
+	#../ns_exec -m $RESTART < ./o.$cnt &
 	wait $pid
 	rm -f counter_out
-	$RSTR < ./o.$cnt &
+	$RESTART < ./o.$cnt &
 	while [ ! -f counter_out ]; do : ; done
 done
 

@@ -15,12 +15,12 @@ canceltimer
 job=`jobs -p | head -1`
 freeze
 echo "Checkpointing job $job"
-$CKPT $job > o.deep
+$CHECKPOINT $job > o.deep
 thaw
 killall userns_deep
 
 echo "Restarting jobs"
-$MKTREE < o.deep &
+$RESTART < o.deep &
 
 touch sandbox/go
 touch sandbox/die

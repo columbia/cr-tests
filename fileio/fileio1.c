@@ -226,6 +226,7 @@ int main(int argc, char *argv[])
 {
 	int c;
 	int fd;
+	int i;
 	char *srcfile;
 	char *destfile;
 	enum test_mode mode;
@@ -244,7 +245,7 @@ int main(int argc, char *argv[])
 	 * Cannot checkpoint process with open device files yet;
 	 */
 	printf("Closing stdio fds and writing messages to %s\n", LOG_FILE);
-	close(0);close(1);close(2);
+	for (i=0; i<100; i++) close(i);
 
 	/*
 	 * Announce that we are now prepared for a checkpoint 

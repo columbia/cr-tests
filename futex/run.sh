@@ -70,7 +70,7 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	sync
 	cp log.${T} log.${T}.pre-ckpt
 	err_msg="FAIL"
-	ckpt ${TEST_PID} > checkpoint-${T}
+	$CHECKPOINT ${TEST_PID} > checkpoint-${T}
 	err_msg="BROK"
 	thaw
 	trap 'do_err; break' ERR EXIT
@@ -91,11 +91,11 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	mv log.${T} log.${T}.post-ckpt
 	cp log.${T}.pre-ckpt log.${T}
 	err_msg="FAIL"
-	# We need to pass -p to mktree since futexes often store the
+	# We need to pass -p to restart since futexes often store the
 	# pid of the task that owns the futex in the futex, even in
 	# the uncontended cases where the kernel is entirely unaware
 	# of the futex. --copy-status ensures that we trap on error.
-	${MKTREE} -p --copy-status < checkpoint-${T}
+	${RESTART} -p --copy-status < checkpoint-${T}
 	retval=$?
 	err_msg="BROK"
 	mv log.${T} log.${T}.post-rstr

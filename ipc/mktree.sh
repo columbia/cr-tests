@@ -1,4 +1,4 @@
 #!/bin/bash
-MKTREE=`which mktree`
-echo mktree.sh: running $MKTREE $1
-$MKTREE $1
+RESTART=`which restart`
+echo mktree.sh: running $RESTART $1
+$RESTART $1

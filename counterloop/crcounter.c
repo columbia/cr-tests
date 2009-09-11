@@ -14,11 +14,10 @@ int main()
 	int cnt=0;
 	FILE *f;
 	char fnam[20];
+	int i;
 
-	close(0);
-	close(1);
-	close(2);
-	close(3);
+	for (i=0; i<100; i++)
+		close(i);
 	f = fopen("counter_out", "r");
 	if (!f) {
 		cnt = 1;

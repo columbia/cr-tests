@@ -8,8 +8,8 @@ freezermountpoint=/cgroup
 
 source ../common.sh
 
-CKPT=`which ckpt`
-RSTR=`which rstr`
+CHECKPOINT=`which checkpoint`
+RESTART=`which restart`
 
 cleanup()
 {
@@ -44,7 +44,7 @@ do_checkpoint()
 	pid=$1
 	cnt=$2
 	freeze $pid
-	$CKPT $pid > d.$cnt/ckpt.out
+	$CHECKPOINT $pid > d.$cnt/ckpt.out
 	unfreeze $pid
 	touch d.$cnt/ckptdone
 }
@@ -118,7 +118,7 @@ done
 echo Restarting all jobs in parallel
 
 for i in `seq 1 $NUMJOBS`; do
-	(cd d.$i; $RSTR < ckpt.out) &
+	(cd d.$i; $RESTART < ckpt.out) &
 done
 
 settimer 10
