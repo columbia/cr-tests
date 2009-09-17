@@ -5,6 +5,9 @@
 set -eu
 echo 1
 
+CHECKPOINT=`which checkpoint`
+RESTART=`which restart`
+
 tmpdir="/tmp/bash-$$"
 rm -rf $tmpdir
 mkdir $tmpdir
@@ -82,7 +85,7 @@ done
 ckptfile="$tmpdir/ckpt-$there_pid"
 
 echo "Checkpointing $there_pid to $ckptfile."
-ckpt $there_pid > $ckptfile
+$CHECKPOINT $there_pid > $ckptfile
 
 echo "Killing $there_pid."
 kill -9 $there_pid
@@ -90,7 +93,7 @@ echo THAWED > "$cgroup/freezer.state"
 wait
 
 echo "Restarting from $ckptfile."
-rstr < $ckptfile &
+$RESTART < $ckptfile &
 
 touch $step2go
 
