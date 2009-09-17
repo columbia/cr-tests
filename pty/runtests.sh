@@ -2,8 +2,6 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-RSTR=`which rstr`
-
 source ../common.sh
 verify_freezer
 verify_paths
@@ -24,7 +22,7 @@ fi
 
 freeze
 sleep 1
-$CKPT $pid > ckpt-out
+$CHECKPOINT $pid > ckpt-out
 echo press enter to continue
 read x
 killall ptyloop
@@ -33,7 +31,7 @@ sleep 0.5
 
 echo "restarting"
 rm -f read-ok read-bad
-$MKTREE < ckpt-out &
+$RESTART < ckpt-out &
 sleep 1
 if [ -f "read-bad" ]; then
 	echo "FAIL: read was bad"
