@@ -81,6 +81,7 @@ main(int argc, char *argv[])
 	pthread_t *tid_list;
 	char log_file[256];
 
+	for (i=0; i<100; i++) close(i);
 	sprintf(log_file, "%s.log", LOG_PREFIX);
 
 	logfp = fopen(log_file, "w");
@@ -104,8 +105,6 @@ main(int argc, char *argv[])
 			usage(argv);
 		}
 	};
-
-	for (i=0; i<100; i++) close(i);
 
 	tid_list = create_threads(num_threads);
 

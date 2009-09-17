@@ -149,6 +149,8 @@ main(int argc, char *argv[])
 	char *id_str = "0";
 	char log_file[256];
 
+	for (i=0; i<100; i++) close(i);
+
 	sprintf(log_file, "%s-%s.log", LOG_PREFIX, id_str);
 
 	logfp = fopen(log_file, "w");
@@ -175,8 +177,6 @@ main(int argc, char *argv[])
 			usage(argv);
 		}
 	};
-
-	for (i=0; i<100; i++) close(i);
 
 	create_children(1, id_str);
 
