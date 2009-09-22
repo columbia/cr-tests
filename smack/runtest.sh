@@ -67,5 +67,22 @@ if [ $? -eq 0 ]; then
 	exit 1
 fi
 
+echo "Testing whether I can restart across smack policy versions"
+v=`cat /smack/version`
+v=$((v+1))
+echo $v > /smack/version
+${MKTREE} < out
+ret1=$?
+if [ $ret1 -ne 0 ]; then
+	echo "FAIL failed to restart without KEEPLSM with new smack version"
+	exit 1
+fi
+${MKTREE} -k < out
+ret2=$?
+if [ $ret2 -ne 1 ]; then
+	echo "FAIL able to restart with KEEPLSM with new smack version"
+	exit 1
+fi
+
 echo "All smack tests passed"
 exit 0
