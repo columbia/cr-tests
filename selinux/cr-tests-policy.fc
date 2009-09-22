@@ -1,0 +1,5 @@
+# cr_tests/selinux/ckpt executable will have:
+# label: system_u:object_r:ckpt_test_exec_t
+# MLS sensitivity: s0
+# MCS categories: <none>
+

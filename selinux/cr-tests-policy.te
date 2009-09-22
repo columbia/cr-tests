@@ -1,0 +1,41 @@
+policy_module(cr-tests-policy,1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+type ckpt_test_exec_t;
+
+type ckpt_test_1_t;
+domain_type(ckpt_test_1_t)
+domain_entry_file(ckpt_test_1_t, ckpt_test_exec_t)
+
+type ckpt_test_2_t;
+domain_entry_file(ckpt_test_2_t, ckpt_test_exec_t)
+type ckpt_test_3_t;
+domain_entry_file(ckpt_test_3_t, ckpt_test_exec_t)
+
+type ckpt_test_file_t;
+files_type(ckpt_test_file_t);
+
+########################################
+#
+# local policy
+#
+
+allow ckpt_test_1_t ckpt_test_file_t:file manage_file_perms;
+files_tmp_filetrans(ckpt_test_1_t,ckpt_test_file_t,file)
+
+allow ckpt_test_2_t ckpt_test_file_t:file manage_file_perms;
+files_tmp_filetrans(ckpt_test_2_t,ckpt_test_file_t,file)
+
+allow ckpt_test_2_t ckpt_test_1_t:process restore;
+allow ckpt_test_2_t ckpt_test_1_t:msg restore;
+allow ckpt_test_2_t ckpt_test_1_t:ipc restore;
+allow ckpt_test_2_t ckpt_test_1_t:file restore;
+allow ckpt_test_2_t self:process { setexec setfscreate setkeycreate };
+
+allow ckpt_test_3_t ckpt_test_file_t:file manage_file_perms;
+files_tmp_filetrans(ckpt_test_3_t,ckpt_test_file_t,file)
+allow ckpt_test_3_t self:process { setexec setfscreate setkeycreate setsockcreate };

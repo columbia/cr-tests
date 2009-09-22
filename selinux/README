@@ -1,0 +1,23 @@
+Make sure
+	expand-check = 0
+is in /etc/selinux/semanage.conf.
+
+You also need to add 'restore' to the definitions of
+all_file_perms, all_process_perms, all_ipc_perms, and all_msg_perms
+in /usr/share/selinux/devel/include/support/all_perms.spt.  The
+refpolicy source likewise must be updated to know of these perms.
+
+Test sequence:
+
+	1. load policy
+	2. run ckpt as ckpt_test_1_t to create a checkpoint image
+		with tasks etc under that label
+	3. run restart as ckpt_test_2_t without KEEP_LSM, making
+		sure tasks are under ckpt_test_2_t label.
+	4. run restart as ckpt_test_2_t with KEEP_LSM, making
+		sure tasks are under ckpt_test_1_t label.
+	5. run restart as ckpt_test_3_t, which does not have
+		restore rights to ckpt_test_1_t, with KEEP_LSM,
+		making sure we get -EPERM.
+
+Later we may want to also test file and ipc labels.

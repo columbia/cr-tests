@@ -1,0 +1,39 @@
+########################################
+## <summary>
+##	Execute a domain transition to run myapp.
+## </summary>
+## <param name="domain">
+##	Domain allowed to transition.
+## </param>
+#
+interface(`ckpt_test_domtrans',`
+	gen_require(`
+		type ckpt_test_1_t, ckpt_test_exec_t;
+		type ckpt_test_2_t, ckpt_test_3_t;
+		type ckpt_test_file_t;
+	')
+
+	role $2 types ckpt_test_1_t;
+	role $2 types ckpt_test_2_t;
+	role $2 types ckpt_test_3_t;
+
+	spec_domtrans_pattern($1,ckpt_test_exec_t,ckpt_test_1_t);
+	spec_domtrans_pattern($1,ckpt_test_exec_t,ckpt_test_2_t);
+	spec_domtrans_pattern($1,ckpt_test_exec_t,ckpt_test_3_t);
+
+	allow $1 ckpt_test_1_t:fd use;
+	allow $1 ckpt_test_2_t:fd use;
+	allow $1 ckpt_test_3_t:fd use;
+	allow ckpt_test_1_t $1:fd use;
+	allow ckpt_test_2_t $1:fd use;
+	allow ckpt_test_3_t $1:fd use;
+	allow $1 ckpt_test_1_t:fifo_file rw_file_perms;
+	allow $1 ckpt_test_2_t:fifo_file rw_file_perms;
+	allow $1 ckpt_test_3_t:fifo_file rw_file_perms;
+
+	allow $1 ckpt_test_file_t:file manage_file_perms;
+# need some way to give pty access... is there an automatic
+# way to guess at that type, or do we just assume that
+# caller is in staff_t or unconfined_t?
+')
+
