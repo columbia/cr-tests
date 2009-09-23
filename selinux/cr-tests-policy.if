@@ -30,6 +30,9 @@ interface(`ckpt_test_domtrans',`
 	allow $1 ckpt_test_1_t:fifo_file rw_file_perms;
 	allow $1 ckpt_test_2_t:fifo_file rw_file_perms;
 	allow $1 ckpt_test_3_t:fifo_file rw_file_perms;
+	allow ckpt_test_1_t $1:process { sigchld };
+	allow ckpt_test_2_t $1:process { sigchld };
+	allow ckpt_test_3_t $1:process { sigchld };
 
 	allow $1 ckpt_test_file_t:file manage_file_perms;
 # need some way to give pty access... is there an automatic

@@ -21,8 +21,14 @@ int main(int argc, char *argv[])
 	pid_t pid = getpid();
 	FILE *file;
 	int ret;
-	int n;
+	int fd, n;
 	char ctx[200];
+
+	fd = open("out", O_RDWR|O_CREAT, 0644);
+	if (fd < 0) {
+		perror("open");
+		exit(1);
+	}
 
 	close(0);
 	close(2);
@@ -33,6 +39,9 @@ int main(int argc, char *argv[])
 		perror("open");
 		exit(1);
 	}
+
+	close(1);
+	dup2(fd, 1);
 
 	if (dup2(0,2) < 0) {
 		perror("dups");
@@ -53,12 +62,12 @@ int main(int argc, char *argv[])
 	fflush(file);
 	file = fopen("/proc/self/attr/current", "r");
 	if (!file)
-		return 1;
+		return 3;
 	n = fread(ctx, 1, 200, file);
 	fclose(file);
 	file = fopen("./context", "w");
 	if (!file)
-		return 1;
+		return 4;
 	fwrite(ctx, 1, n, file);
 	fclose(file);
 

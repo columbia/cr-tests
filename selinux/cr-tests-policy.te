@@ -5,15 +5,23 @@ policy_module(cr-tests-policy,1.0.0)
 # Declarations
 #
 
+attribute ckpt_test_domain;
 type ckpt_test_exec_t;
+files_type(ckpt_test_exec_t);
 
 type ckpt_test_1_t;
+typeattribute ckpt_test_1_t ckpt_test_domain;
 domain_type(ckpt_test_1_t)
 domain_entry_file(ckpt_test_1_t, ckpt_test_exec_t)
 
 type ckpt_test_2_t;
+domain_type(ckpt_test_2_t)
+typeattribute ckpt_test_2_t ckpt_test_domain;
 domain_entry_file(ckpt_test_2_t, ckpt_test_exec_t)
+
 type ckpt_test_3_t;
+domain_type(ckpt_test_3_t)
+typeattribute ckpt_test_3_t ckpt_test_domain;
 domain_entry_file(ckpt_test_3_t, ckpt_test_exec_t)
 
 type ckpt_test_file_t;
@@ -24,18 +32,31 @@ files_type(ckpt_test_file_t);
 # local policy
 #
 
-allow ckpt_test_1_t ckpt_test_file_t:file manage_file_perms;
-files_tmp_filetrans(ckpt_test_1_t,ckpt_test_file_t,file)
 
-allow ckpt_test_2_t ckpt_test_file_t:file manage_file_perms;
-files_tmp_filetrans(ckpt_test_2_t,ckpt_test_file_t,file)
+# Some things all the test domains may do:
+manage_dirs_pattern(ckpt_test_domain, ckpt_test_file_t, ckpt_test_file_t)
+allow ckpt_test_domain { ckpt_test_exec_t ckpt_test_file_t }:file *;
+files_tmp_filetrans(ckpt_test_domain, ckpt_test_file_t, file)
+term_use_all_terms(ckpt_test_domain)
+#allow ckpt_test_domain self:process { fork setexec setfscreate setkeycreate setsockcreate setpgid sigkill setcap execmem };
+allow ckpt_test_domain self:process *;
+allow ckpt_test_domain self:fifo_file *;
+allow ckpt_test_domain self:capability *;
 
-allow ckpt_test_2_t ckpt_test_1_t:process restore;
+# hardcode perms to unconfined pty
+gen_require(`
+	type unconfined_devpts_t;
+	type local_login_t;
+')
+allow ckpt_test_domain unconfined_devpts_t:chr_file { read write ioctl getattr };
+allow ckpt_test_domain local_login_t:fd *;
+
+allow ckpt_test_2_t ckpt_test_1_t:process { restore setcap };
 allow ckpt_test_2_t ckpt_test_1_t:msg restore;
 allow ckpt_test_2_t ckpt_test_1_t:ipc restore;
 allow ckpt_test_2_t ckpt_test_1_t:file restore;
-allow ckpt_test_2_t self:process { setexec setfscreate setkeycreate };
-
-allow ckpt_test_3_t ckpt_test_file_t:file manage_file_perms;
-files_tmp_filetrans(ckpt_test_3_t,ckpt_test_file_t,file)
-allow ckpt_test_3_t self:process { setexec setfscreate setkeycreate setsockcreate };
+allow ckpt_test_2_t ckpt_test_1_t:fd use;
+allow ckpt_test_1_t ckpt_test_2_t:file entrypoint;
+allow ckpt_test_1_t ckpt_test_2_t:fd use;
+allow ckpt_test_1_t ckpt_test_2_t:fifo_file *;
+allow ckpt_test_1_t ckpt_test_2_t:process sigchld;

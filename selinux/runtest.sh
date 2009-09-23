@@ -9,13 +9,12 @@ selinuxload() {
 	fi
 	rm -rf cr-test-module
 	cp -r /usr/share/selinux/devel cr-test-module
+	rm -f cr-test-module/example.??
 	cp cr-tests-policy.* cr-test-module/
 	# plug our dirname into the file contexts file
 	dn=`pwd`
 	echo "$dn/ckpt -- gen_context(system_u:object_r:ckpt_test_exec_t,s0)" \
 		>> cr-test-module/cr-tests-policy.fc
-	chcon -t ckpt_test_exec_t ./restart
-	chcon -t ckpt_test_exec_t ./ckpt
 	# allow our context to transition to the test dirs
 	myrole=`cat /proc/self/attr/current |awk -F: '{ print $2 '}`
 	myctx=`cat /proc/self/attr/current |awk -F: '{ print $3 '}`
@@ -27,10 +26,23 @@ gen_require(\`
 	type $dirctx;
 ')
 ckpt_test_domtrans($myctx,$myrole)
-filetrans_pattern(ckpt_test_1_t,$dirctx,ckpt_test_file_t,file)
 allow $myctx ckpt_test_file_t:file rw_file_perms;
-allow ckpt_test_1_t $dirctx:dir { create_dir_perms };
 EOF
+	dir=`pwd`
+	stop=0
+	while [ $stop -ne 1 ]; do
+		dirctx=`attr -qS -g selinux $dir | awk -F: '{ print $3 '}`
+cat >> cr-test-module/cr-tests-policy.te << EOF
+gen_require(\`
+	type $dirctx;
+')
+list_dirs_pattern(ckpt_test_domain,$dirctx,$dirctx)
+EOF
+		if [ $dir == "/" ]; then
+			stop=1
+		fi
+		dir=`dirname $dir`
+	done
 	(cd cr-test-module; make; semodule -i cr-tests-policy.pp)
 	ret=$?
 	if [ $ret -ne 0 ]; then
@@ -50,26 +62,56 @@ verify_paths
 cp `which restart` restart
 selinuxload
 
-trap 'selinuxunload; echo "Unloaded selinux policy, exiting"' EXIT
+rm -f ./cr-test.out out context
 
-rm -f ./cr-test.out out
+dirctx=`attr -qS -g selinux . | awk -F: '{ print $3 '}`
+filctx=`attr -qS -g selinux ckpt.c | awk -F: '{ print $3 '}`
+chcon -t ckpt_test_file_t .
+chcon -t ckpt_test_exec_t ./restart
+chcon -t ckpt_test_file_t ./ckpt
+chcon -t ckpt_test_exec_t ./wrap
+
+trap '\
+setenforce 0; \
+semodule -B; \
+selinuxunload; \
+echo "Unloaded selinux policy, exiting"; \
+chcon -t $dirctx . ; \
+chcon -t $filctx ./ckpt ; \
+chcon -t $filctx ./context ; \
+chcon -t $filctx ./cr-test.out; \
+chcon -t $filctx ./wrap ; \
+chcon -t $filctx ./out ; \
+chcon -t $filctx ./restart ' EXIT
+
+semodule -BD
+setenforce 1
 
 # create a checkpoint image with task as type ckpt_test_1_t
 echo "Creating checkpoint image as ckpt_test_1_t"
-runcon -t ckpt_test_1_t -- ./ckpt > out
-chcon -t ckpt_test_exec_t ./out
+runcon -t ckpt_test_1_t ./wrap ./ckpt
+
+echo ab > context
+chcon -t ckpt_test_file_t context
 
 # restart from image starting as ckpt_test_2_t
 # make sure it was restarted as ckpt_test_2_t
 echo "Test 1: restart without KEEP_LSM and verify original task context"
 runcon -t ckpt_test_2_t -- ./restart < out
+ret=$?
+if [ $ret -ne 0 ]; then
+	echo "Restart failed, returned $ret"
+	exit 1
+fi
 context=`cat context | awk -F: '{ print $3 '}`
 if [ -z "$context" -o "$context" != "ckpt_test_2_t" ]; then
-	echo "Fail"
+	echo "Fail, context was $context instead of ckpt_test_2_t"
 	exit 1
 fi
 echo Pass
 
+echo ab > context
+chcon -t ckpt_test_file_t context
 # restart with KEEP_LSM from image as ckpt_test_3_t
 # make sure it fails
 echo "Test 2: restart with KEEP_LSM from unauthorized context"
@@ -80,10 +122,17 @@ if [ $? -ne 1 ]; then
 fi
 echo Pass
 
+echo ab > context
+chcon -t ckpt_test_file_t context
 # restart with KEEP_LSM from image as ckpt_test2_t
 # make sure it was restarted as ckpt_test_t
 echo "Test 3: restart with KEEP_LSM and verify restored task context"
 runcon -t ckpt_test_2_t -- ./restart -k < out
+ret=$?
+if [ $ret -ne 0 ]; then
+	echo "Restart failed, returned $ret"
+	exit 1
+fi
 context=`cat context | awk -F: '{ print $3 '}`
 if [ -z "$context" -o "$context" != "ckpt_test_1_t" ]; then
 	echo "Fail"
