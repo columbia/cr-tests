@@ -56,7 +56,20 @@ checkchildren()
 	file=$1
 	for child in `seq 1 $NUMJOBS`; do
 		if [ ! -f d.$child/$1 ]; then
-			return 0
+			echo "d.$child/$1 doesn't exist"
+			return
+		fi
+		if [ "$1" == "ckptdone" ]; then
+			continue
+		fi
+		x=`cat d.$child/$1`
+		if [ "x$x" == "x" ]; then
+			echo "job $child has empty d.$child/$1"
+			return
+		fi
+		if [ "$x" == "BAD" ]; then
+			echo "job $child is still BAD"
+			return
 		fi
 	done
 	kidsdone=1
@@ -102,7 +115,9 @@ echo "... checkpoints done"
 canceltimer
 
 killall crcounter
-rm -f d.?/counter_out d.??/counter_out
+for i in `seq 1 $numjobs`; do
+	echo BAD > d.$i/counter_out
+done
 
 echo Waiting for all jobs to die
 numjobs=1

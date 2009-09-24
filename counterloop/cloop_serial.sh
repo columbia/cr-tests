@@ -57,7 +57,7 @@ rm counter_out
 rm -rf o.*
 #../ns_exec -m ./crcounter &
 ./crcounter &
-while [ ! -f counter_out ]; do : ; done
+while [ "`cat counter_out`" == "BAD" ]; do : ; done
 
 NUMLOOPS=50
 
@@ -76,9 +76,9 @@ for cnt in `seq 1 $NUMLOOPS`; do
 	unfreeze $pid
 	#../ns_exec -m $RESTART < ./o.$cnt &
 	wait $pid
-	rm -f counter_out
+	echo BAD > counter_out
 	$RESTART < ./o.$cnt &
-	while [ ! -f counter_out ]; do : ; done
+	while [ "`cat counter_out`" == "BAD" ]; do : ; done
 done
 
 if [ $fail -ne 0 ]; then

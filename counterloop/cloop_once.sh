@@ -52,9 +52,9 @@ freezermountpoint=`echo $line | awk '{ print $2 '}`
 # Make sure no stray counter from another run is still going
 killall crcounter
 
-rm counter_out
+echo BAD > counter_out
 ../ns_exec -m ./crcounter &
-while [ ! -f counter_out ]; do : ; done
+while [ "`cat counter_out`" == "BAD" ]; do : ; done
 pid=`pidof crcounter`
 
 freeze $pid
@@ -78,6 +78,7 @@ sleep 4
 killall crcounter
 post=`cat counter_out`
 
+echo prekill is $prekill pre is $pre post is $post
 if [ $prekill -le $pre ]; then
 	echo FAIL - counter should have incremented in first run
 	exit 1
