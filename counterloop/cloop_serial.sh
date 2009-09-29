@@ -40,6 +40,19 @@ unfreeze()
 	fi
 }
 
+# bash may not be able to wait on the restarted task, so
+# here we make sure that we really wait until the restarted
+# crcounter has exited.
+wait_on_crcounter()
+{
+	while [ 1 ]; do
+		pidof crcounter
+		if [ $? -ne 0 ]; then
+			break;
+		fi
+	done
+}
+
 # Check freezer mount point
 line=`grep freezer /proc/mounts`
 if [ $? -ne 0 ]; then
@@ -76,6 +89,7 @@ for cnt in `seq 1 $NUMLOOPS`; do
 	unfreeze $pid
 	#../ns_exec -m $RESTART < ./o.$cnt &
 	wait $pid
+	wait_on_crcounter
 	echo BAD > counter_out
 	$RESTART < ./o.$cnt &
 	while [ "`cat counter_out`" == "BAD" ]; do : ; done
