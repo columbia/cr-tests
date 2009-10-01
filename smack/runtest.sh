@@ -35,7 +35,7 @@ echo vs1 > /proc/self/attr/current
 
 echo "Test 1: existing contexts are maintained by default on retart"
 echo vs2 > /proc/self/attr/current
-${MKTREE} < out
+${RESTART} < out
 context=`cat context`
 if [ -z "$context" -o "$context" != "vs2" ]; then
 	echo "FAIL: did not maintain context vs2 on restart"
@@ -45,7 +45,7 @@ thaw
 echo "PASS"
 
 echo "Test 2: can we restore contexts on restart"
-${MKTREE} -k < out
+${RESTART} -k < out
 context=`cat context`
 if [ -z "$context" -o "$context" != "vs1" ]; then
 	echo "FAIL: did not restore context vs1 on restart"
@@ -61,7 +61,7 @@ if [ $? -ne 0 ]; then
 	exit 0
 fi
 echo "Testing whether privilege is required to set task context on restart"
-$capsh --drop=cap_mac_admin -- -c ${MKTREE} -k < out
+$capsh --drop=cap_mac_admin -- -c ${RESTART} -k < out
 if [ $? -eq 0 ]; then
 	echo "FAIL: we were allowed to restore context without cap_mac_admin"
 	exit 1
@@ -71,13 +71,13 @@ echo "Testing whether I can restart across smack policy versions"
 v=`cat /smack/version`
 v=$((v+1))
 echo $v > /smack/version
-${MKTREE} < out
+${RESTART} < out
 ret1=$?
 if [ $ret1 -ne 0 ]; then
 	echo "FAIL failed to restart without KEEPLSM with new smack version"
 	exit 1
 fi
-${MKTREE} -k < out
+${RESTART} -k < out
 ret2=$?
 if [ $ret2 -ne 1 ]; then
 	echo "FAIL able to restart with KEEPLSM with new smack version"
