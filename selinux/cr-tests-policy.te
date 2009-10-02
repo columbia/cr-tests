@@ -54,7 +54,7 @@ allow ckpt_test_domain local_login_t:fd *;
 allow ckpt_test_2_t ckpt_test_1_t:process { restore setcap };
 allow ckpt_test_2_t ckpt_test_1_t:msg restore;
 allow ckpt_test_2_t ckpt_test_1_t:ipc restore;
-allow ckpt_test_2_t ckpt_test_1_t:file restore;
+allow ckpt_test_2_t ckpt_test_1_t:file { restore fown_restore };
 allow ckpt_test_2_t ckpt_test_1_t:fd use;
 allow ckpt_test_1_t ckpt_test_2_t:file entrypoint;
 allow ckpt_test_1_t ckpt_test_2_t:fd use;

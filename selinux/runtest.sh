@@ -10,6 +10,7 @@ selinuxload() {
 	rm -rf cr-test-module
 	cp -r /usr/share/selinux/devel cr-test-module
 	rm -f cr-test-module/example.??
+	rm -rf cr-test-module/tmp
 	cp cr-tests-policy.* cr-test-module/
 	# plug our dirname into the file contexts file
 	dn=`pwd`
@@ -116,8 +117,9 @@ chcon -t ckpt_test_file_t context
 # make sure it fails
 echo "Test 2: restart with KEEP_LSM from unauthorized context"
 runcon -t ckpt_test_3_t -- ./restart -k < out
-if [ $? -ne 1 ]; then
-	echo "Fail"
+ret=$?
+if [ $ret -eq 0 ]; then
+	echo "Fail (return code $ret)"
 	exit 1
 fi
 echo Pass
