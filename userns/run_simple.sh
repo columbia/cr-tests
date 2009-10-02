@@ -29,5 +29,24 @@ settimer 5
 while [ ! -f sandbox/status ]; do : ; done
 canceltimer
 
+get_ltp_user
+if [ $uid -eq -1 ]; then
+	echo "not running ltp-uid test"
+	exit 0
+fi
+echo "Creating checkpoint image as root"
+../simple/ckpt > out
+
+echo "Trying to restart that as uid 500.  Should fail"
+chown $uid out /tmp/cr-test*
+setcap cap_sys_admin+pe $RESTART
+cat out | su ltp -c $RESTART
+ret=$?
+setcap -r $RESTART
+if [ $ret -eq 0 ]; then
+	echo "FAIL restart of priv task as nonpriv user succeeded"
+	exit 1
+fi
+
 echo PASS
 exit 0

@@ -36,5 +36,12 @@ if [ $? -ne 0 ]; then
 	exit 3
 fi
 
+echo "TEST 4: simple user_ns hierarchy, and unpriv credentials test"
+bash run_simple.sh
+if [ $? -ne 0 ]; then
+	echo "run_simple failed"
+	exit 4
+fi
+
 echo 'all tests passed'
 exit 0

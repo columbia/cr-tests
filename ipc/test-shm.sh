@@ -74,10 +74,10 @@ fi
 do_checkpoint
 chown $uid ckpt.shm
 setcap cap_sys_admin+pe $RESTART
-cat ckpt.shm | su ltp -c ./mktree.sh
+cat ckpt.shm | su ltp -c $RESTART
+setcap -r $RESTART
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned shms"
 	exit 1
 fi
-setcap -r $RESTART
 echo "PASS: restart failed as it was supposed to"

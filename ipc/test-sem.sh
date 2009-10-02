@@ -74,10 +74,10 @@ fi
 do_checkpoint
 chown $uid ckpt.sem
 setcap cap_sys_admin+pe $RESTART
-cat ckpt.sem | su ltp -c ./mktree.sh ckpt.sem
+cat ckpt.sem | su ltp -c ${RESTART}
+setcap -r $RESTART
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned sems"
 	exit 1
 fi
-setcap -r $RESTART
 echo "PASS: restart failed as it was supposed to"
