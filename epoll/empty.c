@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <limits.h>
+#include <getopt.h>
 
 /* open() */
 #include <sys/types.h>
@@ -20,59 +22,119 @@
 /* waitpid() and W* status macros */
 #include <sys/wait.h>
 
-/* epoll syscalls */
-#include <sys/epoll.h>
-
-#include "libcrtest/libcrtest.h"
+#include "libeptest.h"
 
 #define LOG_FILE	"log.empty"
-FILE *logfp = NULL;
+
+void usage(FILE *pout)
+{
+	fprintf(pout, "\nempty [-L] [-N] [-h|--help] [-l LABEL] [-n NUM]\n"
+"Create an empty epoll set.\n"
+"\n"
+"\t-L\tPrint the valid LABELs in order and exit.\n"
+"\t-l\tWait for checkpoint at LABEL.\n"
+"\t-N\tPrint the maximum label number and exit.\n"
+"\t-n\tWait for checkpoint at NUM.\n"
+"\n"
+"You may only specify one LABEL or NUM and you may not specify both.\n"
+"Label numbers are integers in the range 0-%d\n"
+"Valid label numbers and their corresponding LABELs are:\n", num_labels - 1);
+	print_labels(pout);
+}
+
+const struct option long_options[] = {
+	{ "print-labels",	0, 0, 'L'},
+	{ "print-max-label-no",	0, 0, 'N'},
+	{ "help",		0, 0, 'h'},
+	{ "label",		1, 0, 'l'},
+	{ "num",		1, 0, 'n'},
+	{0, 0, 0, 0},
+};
+
+void parse_args(int argc, char **argv)
+{
+	ckpt_label = last_label;
+	ckpt_op_num = num_labels;
+	while (1) {
+		char c;
+		c = getopt_long(argc, argv, "LNhl:n:", long_options, NULL);
+		if (c == -1)
+			break;
+		switch(c) {
+			case 'L':
+				print_labels(stdout);
+				exit(EXIT_SUCCESS);
+				break;
+			case 'N':
+				printf("%d\n", num_labels - 1);
+				exit(EXIT_SUCCESS);
+				break;
+			case 'h':
+				usage(stdout);
+				exit(EXIT_SUCCESS);
+				break;
+			case 'l':
+				ckpt_label = optarg;
+				break;
+			case 'n':
+				if ((sscanf(optarg, "%d", &ckpt_op_num) < 1) ||
+				    (ckpt_op_num < 0) ||
+				    (ckpt_op_num >= num_labels)) {
+					fprintf(stderr, "Option -n requires an argument in the range 0-%d. Got %d\n", num_labels - 1, ckpt_op_num);
+					usage(stderr);
+					exit(EXIT_FAILURE);
+				}
+				break;
+			default: /* unknown option */
+				break;
+		}
+	}
+}
 
 /*
- * Log output with a tag (INFO, WARN, FAIL, PASS) and a format.
- * Adds information about the thread originating the message.
- *
- * Flush the log after every write to make sure we get consistent, and
- * complete logs.
+ * A LABEL is a point in the program we can goto where it's interesting to
+ * checkpoint. These enable us to have a set of labels that can be specified
+ * on the commandline.
  */
-#define log(tag, fmt, ...) \
-do { \
-	pid_t __tid = getpid(); \
-	fprintf(logfp, ("%s: thread %d: " fmt), (tag), __tid, ##__VA_ARGS__ ); \
-	fflush(logfp); \
-	fsync(fileno(logfp)); \
-} while(0)
-
-/* like perror() except to the log */
-#define log_error(s) log("FAIL", "%s: %s\n", (s), strerror(errno))
+const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
 
 int main (int argc, char **argv)
 {
-	int efd;
+	int efd, ret = 0;
+	int op_num = 0;
+
+	parse_args(argc, argv);
 
 	/* FIXME eventually stdio streams should be harmless */
 	close(0);
-	logfp = fopen(LOG_FILE, "w");
+	logfp = fopen(LOG_FILE, "w+");
 	if (!logfp) {
 		perror("could not open logfile");
 		exit(1);
 	}
-	dup2(fileno(logfp), 1); /* redirect stdout and stderr to the log file */
-	dup2(fileno(logfp), 2);
+	/* redirect stdout and stderr to the log file */
+	if (dup2(fileno(logfp), 1) < 0) {
+		log_error("dup2(logfp, 1)");
+		goto out;
+	}
+	if (dup2(fileno(logfp), 2) < 0) {
+		log_error("dup2(logfp, 2)");
+		goto out;
+	}
 	if (!move_to_cgroup("freezer", "1", getpid())) {
 		log_error("move_to_cgroup");
 		exit(2);
 	}
 
-	efd = epoll_create(1);
+label(create,
+	efd, epoll_create(1));
 	if (efd < 0) {
 		perror("epoll_create(1)");
 		fclose(logfp);
 		exit(EXIT_FAILURE);
 	}
-	set_checkpoint_ready();
-	while (!test_checkpoint_done())
-		usleep(10000);
+label(do_nothing, ret, ret + 0);
+out:
 	if (close(efd) < 0) {
 		perror("close()");
 		fclose(logfp);
@@ -81,3 +143,5 @@ int main (int argc, char **argv)
 	fclose(logfp);
 	exit(EXIT_SUCCESS);
 }
+
+const char __attribute__((__section__(".LABELs"))) *last_label  = "<end>";

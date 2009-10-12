@@ -29,95 +29,15 @@
 /* waitpid() and W* status macros */
 #include <sys/wait.h>
 
-/* epoll syscalls */
-#include <sys/epoll.h>
-
-#include "libcrtest/libcrtest.h"
+#include "libeptest.h"
 
 #define LOG_FILE	"log.pipe"
-FILE *logfp = NULL;
-
-/*
- * Log output with a tag (INFO, WARN, FAIL, PASS) and a format.
- * Adds information about the thread originating the message.
- *
- * Flush the log after every write to make sure we get consistent, and
- * complete logs.
- */
-#define log(tag, fmt, ...) \
-do { \
-	pid_t __tid = getpid(); \
-	fprintf(logfp, ("%s: thread %d: " fmt), (tag), __tid, ##__VA_ARGS__ ); \
-	fflush(logfp); \
-	fsync(fileno(logfp)); \
-} while(0)
-
-/* like perror() except to the log */
-#define log_error(s) log("FAIL", "%s: %s\n", (s), strerror(errno))
-
-#define stringify(expr) #expr
-
-/* Print EPOLL flag */
-#define peflag(flag) \
-do { \
-	if (!events & flag)  \
-		break; \
-	len = snprintf(p, sz, stringify(flag)); \
-	if (len > 0) { \
-		sz -= len; \
-		p += len; \
-	} else \
-		abort(); \
-} while (0)
-
-const char * eflags(unsigned int events)
-{
-	static char buffer[256];
-	char *p = buffer;
-	size_t sz = 256;
-	int len;
-
-	peflag(EPOLLIN);
-	peflag(EPOLLPRI);
-	peflag(EPOLLOUT);
-	peflag(EPOLLERR);
-	peflag(EPOLLHUP);
-	peflag(EPOLLRDHUP);
-	peflag(EPOLLET);
-	peflag(EPOLLONESHOT);
-
-	return buffer;
-}
-#undef peflag
-
-/*
- * A LABEL is a point in the program we can goto where it's interesting to
- * checkpoint. These enable us to have a set of labels that can be specified
- * on the commandline.
- */
-const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
-const char __attribute__((__section__(".LABELs"))) *last_label;
-
-#define num_labels ((&last_label - &first_label) - 1)
-
-static inline const char * labels(int i)
-{
-	return (&first_label)[num_labels - i];
-}
-
-void print_labels(FILE *pout)
-{
-	int i;
-
-	if (num_labels > 0)
-		fprintf(pout, "\tNUM\tLABEL\n");
-	for (i = 0; i < num_labels; i++)
-		fprintf(pout, "\t%d\t%s\n", i, labels(i));
-}
 
 void usage(FILE *pout)
 {
-	fprintf(pout, "\nepoll_pipe [-L] [-N] [-h|--help] [-l LABEL] [-n NUM]\n"
+	fprintf(pout, "\npipe [-L] [-N] [-h|--help] [-l LABEL] [-n NUM]\n"
+"Create an epoll set and use it to wait for IO on a pipe.\n"
+"\n"
 "\t-L\tPrint the valid LABELs in order and exit.\n"
 "\t-l\tWait for checkpoint at LABEL.\n"
 "\t-N\tPrint the maximum label number and exit.\n"
@@ -137,10 +57,6 @@ const struct option long_options[] = {
 	{ "num",		1, 0, 'n'},
 	{0, 0, 0, 0},
 };
-
-/* The spot (LABEL or label number) where we should test checkpoint/restart */
-char const *ckpt_label;
-int ckpt_op_num = 0;
 
 void parse_args(int argc, char **argv)
 {
@@ -182,39 +98,12 @@ void parse_args(int argc, char **argv)
 	}
 }
 
-/* Signal ready for and await the checkpoint */
-void do_ckpt(void)
-{
-	set_checkpoint_ready();
-	while (!test_checkpoint_done())
-		usleep(10000);
-
-}
-
-/* Label a spot in the code... */
-#define label(lbl, ret, action) \
-do { \
-	static char __attribute__((__section__(".LABELs"))) *___ ##lbl## _l = stringify(lbl); \
-	goto lbl ; \
-lbl: \
-\
-        log("INFO", "label: %s: \"%s\"\n", \
-		    labels(op_num), stringify(action)); \
-\
-	ret = action ; \
-\
-	if ((ckpt_op_num == op_num) || \
-	    (strcmp(ckpt_label, ___ ##lbl## _l) == 0)) \
-		do_ckpt(); \
-	if (ret < 0) { \
-		log("FAIL", "%d\t%s: %s\n", \
-		    op_num, ___ ##lbl## _l, stringify(action) ); \
-		goto out; \
-	} \
-	op_num++; \
-} while(0)
-
-#define HELLO "Hello world!\n"
+/*
+ * A LABEL is a point in the program we can goto where it's interesting to
+ * checkpoint. These enable us to have a set of labels that can be specified
+ * on the commandline.
+ */
+const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
 int main(int argc, char **argv)
 {
 	struct epoll_event ev[2] = {

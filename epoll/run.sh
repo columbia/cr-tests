@@ -47,41 +47,35 @@ CURTEST=0
 
 while [ $CURTEST -lt $NUMTESTS ]; do
 	T=${TESTS[$CURTEST]}
-	set -x
-	if [ "${T}" == "pipe" ]; then
-		if (( IMAX < 0 )); then
-			((IMAX = $(./${T} -N)))
-			((I = 0))
-		fi
-		TARGS=( "-n" "${I}" )
-	else
-		TARGS=()
-		I=""
+	if (( IMAX < 0 )); then
+		((IMAX = $(./${T} -N)))
+		((I = 0))
+		echo "INFO: Test ${T} does:"
+		./${T} -h | sed -e 's/^/INFO:/'
 	fi
-	set +x
+	TLABEL=$(./${T} -L | head -n +$((I + 2)) | tail -n 1 | cut -f 3)
+	TARGS=( "-l" "${TLABEL}" )
 	trap 'do_err; break' ERR EXIT
 	rm -f ./checkpoint-{ready,done} TBROK
-	echo "Running test: ${T}"
-	set -x
+	echo "Running test: ${T} -l ${TLABEL}"
 	./${T} ${TARGS[@]} &
 	TEST_PID=$!
-	set +x
 	while [ '!' -r "./checkpoint-ready" ]; do
 		sleep 1
 	done
 	freeze
 	trap 'thaw; do_err; break' ERR EXIT
 	sync
-	cp log.${T} log.${T}${I}.pre-ckpt
+	cp log.${T} log.${T}${LABEL}.pre-ckpt
 	err_msg="FAIL"
-	${CHECKPOINT} ${TEST_PID} > checkpoint-${T}${I}
+	${CHECKPOINT} ${TEST_PID} > checkpoint-${T}${LABEL}
 	err_msg="BROK"
 	thaw
 	trap 'do_err; break' ERR EXIT
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
 	retval=$?
-	echo "Test ${T}${I} done, returned ${retval}"
+	echo "Test ${T}${LABEL} done, returned ${retval}"
 	if [ -f "TBROK" ]; then
 		echo "BROK: epoll snafu, re-running this test"
 		continue
@@ -89,36 +83,30 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	err_msg="FAIL"
 	[ $retval -eq 0 ]
 	err_msg="BROK"
-	echo PASS
+	echo "PASS ${T} ${TLABEL} original"
 
 	# now try restarting
-	mv log.${T} log.${T}${I}.post-ckpt
-	cp log.${T}${I}.pre-ckpt log.${T}
+	mv log.${T} log.${T}${LABEL}.post-ckpt
+	cp log.${T}${LABEL}.pre-ckpt log.${T}
 	err_msg="FAIL"
 	# --copy-status ensures that we trap on error.
-	${RESTART} --copy-status < checkpoint-${T}${I}
+	${RESTART} --copy-status < checkpoint-${T}${LABEL}
 	retval=$?
 	err_msg="FAIL"
 	[ ${retval} -eq 0 ];
-	echo PASS
+	echo "PASS ${T} ${TLABEL} restart"
 	err_msg="BROK"
-	if [ ! -f log.${T}${I} ]; then
-		mv log.${T} log.${T}${I}
+	if [ ! -f log.${T}${LABEL} ]; then
+		mv log.${T} log.${T}${LABEL}
 	fi
 	trap '' ERR EXIT
 
-	set -x
-	if [ "${T}" == "pipe" ]; then
-		((I = I + 1))
-		if (( I > IMAX )); then
-			((CURTEST = CURTEST + 1))
-			((IMAX = -1))
-			((I = 0))
-		fi
-	else
+	((I = I + 1))
+	if (( I > IMAX )); then
 		((CURTEST = CURTEST + 1))
+		((IMAX = -1))
+		((I = 0))
 	fi
-	set +x
 	wait
 done
 trap '' ERR EXIT
