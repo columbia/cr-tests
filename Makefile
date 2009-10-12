@@ -1,5 +1,5 @@
 SUBDIRS = libcrtest counterloop fileio simple cr-ipc-test userns ipc \
-	  sleep process-tree futex
+	  sleep process-tree futex epoll
 
 targets = ns_exec
 
