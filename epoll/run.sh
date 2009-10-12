@@ -111,6 +111,8 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 done
 trap '' ERR EXIT
 
+# TODO add scm testcase to run.sh
+
 rm -f ./checkpoint-{ready,done}
 
 

@@ -3,7 +3,7 @@
 LIBS := ../libcrtest/libcrtest.a ./libeptest.a
 CFLAGS := -Wall $(ARCHOPTS) -I../ -I../libcrtest
 
-PROGS=empty pipe sk10k cycle
+PROGS=empty pipe sk10k cycle scm
 
 .PHONY: all clean
 
