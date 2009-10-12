@@ -20,7 +20,7 @@ fi ) | grep -E '^[[:space:]]*CONFIG_EPOLL=y' > /dev/null 2>&1
 	exit 1
 }
 
-TESTS=( empty pipe )
+TESTS=( empty pipe sk10k )
 #make ${TESTS[@]}
 
 # mount -t cgroup foo /cg
