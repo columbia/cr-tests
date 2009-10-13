@@ -2,6 +2,9 @@
 
 FILE *logfp = NULL;
 
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
 /* Print EPOLL flag */
 #define peflag(flag) \
 do { \

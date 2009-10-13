@@ -31,6 +31,10 @@
 
 #include "libeptest.h"
 
+#ifndef MSG_CMSG_CLOEXEC
+#define MSG_CMSG_CLOEXEC 0x40000000
+#endif
+
 #define LOG_FILE	"log.scm"
 
 void usage(FILE *pout)
