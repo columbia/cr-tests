@@ -15,12 +15,21 @@
 #include "../cr.h"
 
 #define OUTFILE "/tmp/cr-test.out"
+#define LOGFILE "log"
 
 int main(int argc, char *argv[])
 {
 	pid_t pid = getpid();
 	FILE *file;
+	int logfd;
 	int ret;
+
+	unlink(LOGFILE);
+	logfd = open(LOGFILE, O_RDWR | O_CREAT, 0600);
+	if (logfd < 0) {
+		perror("open logfile");
+		exit(1);
+	}
 
 	close(0);
 	close(2);
@@ -40,7 +49,7 @@ int main(int argc, char *argv[])
 	fprintf(file, "hello, world!\n");
 	fflush(file);
 
-	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, CHECKPOINT_SUBTREE);
+	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, CHECKPOINT_SUBTREE, logfd);
 	if (ret < 0) {
 		perror("checkpoint");
 		exit(2);
@@ -49,6 +58,7 @@ int main(int argc, char *argv[])
 	fprintf(file, "world, hello!\n");
 	fprintf(file, "ret = %d\n", ret);
 	fflush(file);
+	close(logfd);
 
 	return 0;
 }
