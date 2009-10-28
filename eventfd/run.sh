@@ -98,10 +98,11 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 
 	# Now that the original, non-restart run is complete let's restart
 	# each checkpoint and make sure they produce the same results.
-	touch "./checkpoint-ready" "./checkpoint-done" "./checkpoint-skip"
-	trap 'do_err; break 2' ERR EXIT
+	trap 'do_err; break 2' EXIT
+	trap '' ERR
 	echo "Restarting checkpoints"
 	for ((I=0; I <= IMAX; I = I + 1)); do
+		touch "./checkpoint-ready" "./checkpoint-done" "./checkpoint-skip"
 		TLABEL="${TEST_LABELS[$I]}"
 
 		# now try restarting. restore log first
@@ -109,7 +110,10 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 		echo "Restart ${I} ${TLABEL}"
 		err_msg="FAIL"
 		# --copy-status ensures that we trap on error.
-		${RESTART} --copy-status -w < "checkpoint-${T}.${I}.${TLABEL}"
+		trap 'do_err; break 2' ERR
+		${RESTART} --copy-status -w < checkpoint-${T}.${I}.${TLABEL}
+		echo restart returned $?
+		trap '' ERR
 		err_msg="BROK"
 
 		# Now compare the logs. We can strip the thread id differences
@@ -126,10 +130,10 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 	done
 	rm -f "log.${T}.orig"
 
-	trap '' ERR EXIT
+	trap '' EXIT
 	wait
 done
-trap '' ERR EXIT
+trap '' EXIT
 
 rm -f "./checkpoint-"{ready,done,skip}
 
