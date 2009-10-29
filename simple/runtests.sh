@@ -4,7 +4,7 @@
 
 RESTART=`which restart`
 
-./ckpt > out
+../ns_exec -cp ./ckpt
 if [ ! -f /tmp/cr-test.out ]; then
 	echo "FAIL - ckpt did not create /tmp/cr-test.out"
 	exit 1
@@ -21,7 +21,7 @@ if [ ! $v -gt 0 ]; then
 	exit 3
 fi
 
-$RESTART < out
+$RESTART --pidns -l rlog -i out
 v=`grep ret /tmp/cr-test.out | awk -F=  '{ print $2 }'`
 if [ "x$v" == "x" ]; then
 	echo "FAIL - restart return value was not in /tmp/cr-test.out"

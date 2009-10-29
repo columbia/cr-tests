@@ -15,6 +15,7 @@
 #include "../cr.h"
 
 #define OUTFILE "/tmp/cr-test.out"
+#define CKPTFILE "out"
 #define LOGFILE "log"
 
 int main(int argc, char *argv[])
@@ -22,6 +23,7 @@ int main(int argc, char *argv[])
 	pid_t pid = getpid();
 	FILE *file;
 	int logfd;
+	int ckptfd;
 	int ret;
 
 	unlink(LOGFILE);
@@ -31,8 +33,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	close(0);
-	close(2);
 
 	unlink(OUTFILE);
 	file = fopen(OUTFILE, "w+");
@@ -41,15 +41,22 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (dup2(0,2) < 0) {
-		perror("dups");
+	unlink(CKPTFILE);
+	ckptfd = open(CKPTFILE, O_WRONLY|O_CREAT, 0644);
+	if (ckptfd < 0) {
+		perror("open");
 		exit(1);
 	}
+
+	/* TODO these may no longer need to be closed? */
+	close(0);
+	close(1);
+	close(2);
 
 	fprintf(file, "hello, world!\n");
 	fflush(file);
 
-	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, CHECKPOINT_SUBTREE, logfd);
+	ret = syscall(__NR_checkpoint, pid, ckptfd, CHECKPOINT_SUBTREE, logfd);
 	if (ret < 0) {
 		perror("checkpoint");
 		exit(2);
