@@ -9,19 +9,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int main()
+#define FNAM "counter_out"
+int main(int argc, char *argv[])
 {
 	int cnt=0;
 	FILE *f;
-	char fnam[20];
+	char fnam[200];
 	int i;
+
+	if (argc > 1)
+		snprintf(fnam, 200, "%s/%s", argv[1], FNAM);
+	else
+		snprintf(fnam, 200,  "%s", FNAM);
 
 	for (i=0; i<100; i++)
 		close(i);
-	f = fopen("counter_out", "r");
+	f = fopen(fnam, "r");
 	if (!f) {
 		cnt = 1;
-		f = fopen("counter_out", "w");
+		f = fopen(fnam, "w");
 		if (!f)
 			return 1;
 		fprintf(f, "%d", ++cnt);
@@ -32,7 +38,7 @@ int main()
 	}
 	for (;;) {
 		sleep(3);
-		f = fopen("counter_out", "w");
+		f = fopen(fnam, "w");
 		if (!f)
 			return 1;
 		fprintf(f, "%d", ++cnt);
