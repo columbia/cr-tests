@@ -14,7 +14,8 @@
 #include <sys/syscall.h>
 #include "../cr.h"
 
-#define OUTFILE "/tmp/cr-test.out"
+#define DEFDIR "/tmp"
+#define OUTFILE "cr-test.out"
 #define CKPTFILE "out"
 #define LOGFILE "log"
 
@@ -25,26 +26,37 @@ int main(int argc, char *argv[])
 	int logfd;
 	int ckptfd;
 	int ret;
+	char buf[400], *dir;
 
-	unlink(LOGFILE);
-	logfd = open(LOGFILE, O_RDWR | O_CREAT, 0600);
+	if (argc < 2)
+		dir = DEFDIR;
+	else
+		dir = argv[1];
+
+	snprintf(buf, 400, "%s/%s", dir, LOGFILE);
+	unlink(buf);
+	logfd = open(buf, O_RDWR | O_CREAT, 0600);
 	if (logfd < 0) {
-		perror("open logfile");
+		perror("open");
+		printf("error opening logfile %s", buf);
 		exit(1);
 	}
 
-
-	unlink(OUTFILE);
-	file = fopen(OUTFILE, "w+");
+	snprintf(buf, 400, "%s/%s", dir, OUTFILE);
+	unlink(buf);
+	file = fopen(buf, "w+");
 	if (!file) {
 		perror("open");
+		printf("error opening outfile %s", buf);
 		exit(1);
 	}
 
-	unlink(CKPTFILE);
-	ckptfd = open(CKPTFILE, O_WRONLY|O_CREAT, 0644);
+	snprintf(buf, 400, "%s/%s", dir, CKPTFILE);
+	unlink(buf);
+	ckptfd = open(buf, O_WRONLY|O_CREAT, 0644);
 	if (ckptfd < 0) {
 		perror("open");
+		printf("error opening ckptfile %s", buf);
 		exit(1);
 	}
 
