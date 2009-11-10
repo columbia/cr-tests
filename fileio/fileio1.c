@@ -28,6 +28,26 @@
 #define CKPT_READY	"checkpoint.ready"
 #define COPY_DONE	"copy.done"
 
+char log_fnam[400];
+char slowdown_fnam[400];
+char ckptready_fnam[400];
+char copydone_fnam[400];
+
+void setup_filenames(char *dir)
+{
+	if (dir) {
+		snprintf(log_fnam, 400, "%s/%s", dir, LOG_FILE);
+		snprintf(slowdown_fnam, 400, "%s/%s", dir, SLOW_DOWN_FILE);
+		snprintf(ckptready_fnam, 400, "%s/%s", dir, CKPT_READY);
+		snprintf(copydone_fnam, 400, "%s/%s", dir, COPY_DONE);
+	} else {
+		snprintf(log_fnam, 400, "%s", LOG_FILE);
+		snprintf(slowdown_fnam, 400, "%s", SLOW_DOWN_FILE);
+		snprintf(ckptready_fnam, 400, "%s", CKPT_READY);
+		snprintf(copydone_fnam, 400, "%s", COPY_DONE);
+	}
+}
+
 FILE *logfp;
 
 static void usage(char *argv0)
@@ -68,7 +88,7 @@ static void do_sync(FILE *fp)
 
 static void do_exit(int status)
 {
-	unlink(CKPT_READY);
+	unlink(ckptready_fnam);
 
 	do_sync(logfp);
 	fclose(logfp);
@@ -114,7 +134,7 @@ static void slow_down(int rec_num)
 	int rc;
 	int num_skip = 10;
 
-	rc = access(SLOW_DOWN_FILE, F_OK);
+	rc = access(slowdown_fnam, F_OK);
 
 	if (rc == 0) {
 
@@ -129,7 +149,7 @@ static void slow_down(int rec_num)
 		if (!(rec_num % num_skip))
 			sleep(1);
 	} else if (errno != ENOENT) {
-		fprintf(logfp, "access(%s) error %s\n", SLOW_DOWN_FILE,
+		fprintf(logfp, "access(%s) error %s\n", slowdown_fnam,
 				strerror(errno));
 		do_exit(1);
 	}
@@ -175,10 +195,10 @@ static void copy_data(char *srcfile, char *destfile)
 			/*
 			 * Announce we are now done copying
 			 */
-			fd = creat(COPY_DONE, 0666);
+			fd = creat(copydone_fnam, 0666);
 			if (fd < 0) {
 				fprintf(logfp, "creat(%s) error %s\n",
-						 COPY_DONE, strerror(errno));
+						 copydone_fnam, strerror(errno));
 				do_exit(1);
 			}
 			close(fd);
@@ -230,12 +250,20 @@ int main(int argc, char *argv[])
 	char *srcfile;
 	char *destfile;
 	enum test_mode mode;
+	char *mydir = NULL;
 
 	srcfile = NULL;
 	destfile = NULL;
 	mode = 0;
 
-	logfp = fopen(LOG_FILE, "w");
+	if (argc > 2 &&  strcmp(argv[1], "-d") == 0) {
+		mydir = argv[2];
+		argc -= 2;
+		argv += 2;
+	}
+	setup_filenames(mydir);
+
+	logfp = fopen(log_fnam, "w");
 	if (!logfp) {
 		perror("logfile");
 		_exit(1);
@@ -244,15 +272,15 @@ int main(int argc, char *argv[])
 	/*
 	 * Cannot checkpoint process with open device files yet;
 	 */
-	printf("Closing stdio fds and writing messages to %s\n", LOG_FILE);
+	printf("Closing stdio fds and writing messages to %s\n", log_fnam);
 	for (i=0; i<100; i++) close(i);
 
 	/*
 	 * Announce that we are now prepared for a checkpoint 
 	 */
-	fd = creat(CKPT_READY, 0666);
+	fd = creat(ckptready_fnam, 0666);
 	if (fd < 0) {
-		fprintf(logfp, "creat(%s) error %s\n", CKPT_READY,
+		fprintf(logfp, "creat(%s) error %s\n", ckptready_fnam,
 				strerror(errno));
 		do_exit(1);
 	}

@@ -2,51 +2,24 @@
 # Copyright 2009 IBM Corp.
 # Author: Sukadev Bhattiprolu <sukadev@us.ibm.com>
 
-freezermountpoint=/cgroup
-CHECKPOINT="../"
-NS_EXEC="../ns_exec"
-CR=`which checkpoint`
-RSTR=`which restart`
+source ../common.sh
 
-SLOW_DOWN="slow-down-fileio"
-CKPT_FILE="ckpt-fileio1";
-CKPT_READY="checkpoint.ready"
-COPY_DONE="copy.done"
-SRC_FILE="input-data.1";
-DEST_FILE="output-data.1";
-DEST_FILE_SNAP="output-data.1.snap";
-TEST_LOG="log.fileio1"
-TEST_LOG_SNAP="log.fileio1.snap"
+dir=`mktemp -p . -d -t cr_fileio_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
 
-LOG_FILE="f1-loop.log"
+SLOW_DOWN="$dir/slow-down-fileio"
+CKPT_FILE="$dir/ckpt-fileio1";
+CKPT_READY="$dir/checkpoint.ready"
+COPY_DONE="$dir/copy.done"
+SRC_FILE="$dir/input-data.1";
+DEST_FILE="$dir/output-data.1";
+DEST_FILE_SNAP="$dir/output-data.1.snap";
+TEST_LOG="$dir/log.fileio1"
+TEST_LOG_SNAP="$dir/log.fileio1.snap"
+
+LOG_FILE="$dir/f1-loop.log"
 TEST_CMD="./fileio1"
-
-freeze()
-{
-	mkdir ${freezermountpoint}/$1
-	echo $1 > ${freezermountpoint}/$1/tasks
-	sleep 0.3
-	/bin/echo FROZEN > ${freezermountpoint}/$1/freezer.state
-	sleep 0.3
-}
-
-unfreeze()
-{
-	/bin/echo THAWED > ${freezermountpoint}/$1/freezer.state
-	echo $1 > ${freezermountpoint}/tasks
-	sleep 0.3
-	rmdir ${freezermountpoint}/$1
-}
-
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroups"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer cgroup /cgroup"
-	exit 1
-fi
-freezermountpoint=`echo $line | awk '{ print $2 '}`
+NS_EXEC="../ns_exec"
 
 # Make sure no stray TEST_CMD from another run is still going
 killall $TEST_CMD
@@ -54,7 +27,7 @@ killall $TEST_CMD
 #echo > $LOG_FILE
 
 #Create the SRC_FILE
-$TEST_CMD -C $SRC_FILE
+$TEST_CMD -d  $dir -C $SRC_FILE
 
 cnt=1
 sleep_time=3;
@@ -69,7 +42,7 @@ for testnum in `seq 1 $NUMTESTS`; do
 	# Remove CKPT_READY file, start the application and let app tell
 	# us when it is ready
 	rm -f $CKPT_READY;
-	$NS_EXEC -m $TEST_CMD -c $SRC_FILE $DEST_FILE &
+	$NS_EXEC -m $TEST_CMD -d $dir -c $SRC_FILE $DEST_FILE &
 	while [ ! -f $CKPT_READY ]; do
 		sleep 1;
 	done;
@@ -85,11 +58,11 @@ for testnum in `seq 1 $NUMTESTS`; do
 		exit 1
 	fi
 
-	freeze $pid
+	freeze_pid $pid
 
 	# Checkpoint
-	echo $CR $pid > $CKPT_FILE
-	$CR $pid > $CKPT_FILE
+	echo $CHECKPOINT $pid > $CKPT_FILE
+	$CHECKPOINT $pid > $CKPT_FILE
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "===== Checkpoint of $pid failed"
@@ -103,7 +76,7 @@ for testnum in `seq 1 $NUMTESTS`; do
 
 	ls -l $SRC_FILE $DEST_FILE
 
-	unfreeze $pid
+	thaw $pid
 
 	kill -9 $pid
 
