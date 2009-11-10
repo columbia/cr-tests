@@ -14,3 +14,17 @@ OR, to run the tests automatically, just type
 
 make
 bash ./runall.sh
+
+To mount the freezer as needed for tests, you could do:
+
+#!/bin/sh
+cat > /bin/remove_dead_cgroup.sh << __EOF
+#!/bin/sh
+echo "Removing dead cgroup .$*." >> /var/log/cgroup
+rmdir /cgroup/$* >> /var/log/cgroup 2>&1
+echo "return value was $?" >> /var/log/cgroup
+__EOF
+mount -t cgroup -o freezer freezer /cgroup/
+echo /bin/remove_dead_cgroup.sh > /cgroup/release_agent 
+echo 1 > /cgroup/notify_on_release
+chown -R ltp:ltp /cgroup
