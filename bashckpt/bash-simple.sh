@@ -4,7 +4,7 @@
 
 set -eu
 
-tmpdir="/tmp/bash-$1"
+tmpdir=$2
 
 step1go="$tmpdir/step1-go"
 step1ok="$tmpdir/step1-ok"

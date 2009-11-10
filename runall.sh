@@ -83,6 +83,15 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running bash test
+pushd bashckpt
+bash bash-cr.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 5
+fi
+popd
+
 exit 0
 
 echo Running userid/namespace test
@@ -91,15 +100,6 @@ bash runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 4
-fi
-popd
-
-echo Running bash test
-pushd bashckpt
-bash bash-cr.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 5
 fi
 popd
 

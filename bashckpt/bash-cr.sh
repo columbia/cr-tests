@@ -3,33 +3,17 @@
 # Author: Nathan Lynch
 
 set -eu
-echo 1
 
-CHECKPOINT=`which checkpoint`
-RESTART=`which restart`
+source ../common.sh
+tmpdir=`mktemp -p . -d -t cr_bash_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $tmpdir"
 
-tmpdir="/tmp/bash-$$"
-rm -rf $tmpdir
-mkdir $tmpdir
+cgroup=$freezerdir
 
-echo 2
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroup"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer cgroup /cgroup"
-	exit 1
-fi
-cgroup_mnt=`echo $line | awk '{ print $2 '}`
-cgroup="$cgroup_mnt/bash-test-$$"
-
-echo 3
 step1go="$tmpdir/step1-go"
 step1ok="$tmpdir/step1-ok"
 step2go="$tmpdir/step2-go"
 step2ok="$tmpdir/step2-ok"
-echo 4
 
 pidfile="$tmpdir/pid-there"
 
@@ -44,7 +28,7 @@ rmdir "$cgroup" ; \
 echo results in $tmpdir ' EXIT
 
 echo "Running ./bash-simple.sh in background."
-./bash-simple.sh $$ &
+./bash-simple.sh $$ $tmpdir &
 
 # note: $! is the pid of ns_exec, not the command, so we need to be a
 # little more clever to derive the pid to pass to ip link set netns
@@ -53,15 +37,6 @@ echo -n "Waiting for background script to start... "
 while [ ! -f $pidfile ] ; do sleep 1 ; done
 read there_pid < $pidfile
 echo "$there_pid."
-
-echo "Creating cgroup $cgroup."
-mkdir "$cgroup"
-
-    # need to assign cpus and mems to our new cgroup
-for knob in cpuset.cpus cpuset.mems ; do
-    test -f "$cgroup_mnt/$knob" && \
-	cat "$cgroup_mnt/$knob" > "$cgroup/$knob"
-done
 
 echo $there_pid > "$cgroup/tasks"
 
@@ -108,5 +83,7 @@ while [ ! -f $step2ok ] ; do
 	sleep 1
 done
 
-echo "Pass."
+echo "PASS."
+echo
+echo
 exit 0
