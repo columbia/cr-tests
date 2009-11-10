@@ -65,6 +65,15 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running restart block test
+pushd sleep
+bash runtest.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 6
+fi
+popd
+
 exit 0
 
 echo Running userid/namespace test
@@ -88,15 +97,6 @@ popd
 echo Running ipc tests
 pushd ipc
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 6
-fi
-popd
-
-echo Running restart block test
-pushd sleep
-bash runtest.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 6

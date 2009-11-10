@@ -7,13 +7,16 @@
 #include <stdlib.h>
 #include <libcrtest.h>
 
-#define OUTFILE "/tmp/sleepout"
-
 int main(int argc, char *argv[])
 {
+	char *freezerdir = "1";
+
+	if (argc > 1)
+		freezerdir = argv[1];
+
 	printf("I am %d\n", getpid());
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		printf("Failed to move to freezer cgroup /1\n");
+	if (!move_to_cgroup("freezer", freezerdir, getpid())) {
+		printf("Failed to move to freezer cgroup %s\n", freezerdir);
 		do_exit(1);
 	}
 	close(0);

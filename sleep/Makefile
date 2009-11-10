@@ -10,3 +10,4 @@ all: $(targets)
 
 clean:
 	rm -f $(targets) o.*
+	rm -rf cr_sleep*

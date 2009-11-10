@@ -2,33 +2,15 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	echo "please mount freezer cgroup"
-	echo "  mkdir /cgroup"
-	echo "  mount -t cgroup -o freezer freezer /cgroup"
-	exit 1
-fi
-freezermountpoint=`echo $line | awk '{ print $2 '}`
-mkdir $freezermountpoint/1 > /dev/null 2>&1
+source ../common.sh
 
-RESTART=`which restart`
-CHECKPOINT=`which checkpoint`
-
-freeze()
-{
-	echo FROZEN > ${freezermountpoint}/1/freezer.state
-}
-
-thaw()
-{
-	echo THAWED > ${freezermountpoint}/1/freezer.state
-}
+dir=`mktemp -p . -d -t cr_sleep_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
 
 killall sleeptest > /dev/null 2>&1
 
-./sleeptest &
+cd $dir
+../sleeptest `basename $freezerdir` &
 sleep 1
 freeze
 $CHECKPOINT `pidof sleeptest` > o.sleep
