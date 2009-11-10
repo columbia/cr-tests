@@ -4,49 +4,36 @@
 # Changelog:
 #   Mar 23, 2009: rework into cr_tests
 
-freezermountpoint=/cgroup
-
 source ../common.sh
 
-CHECKPOINT=`which checkpoint`
-RESTART=`which restart`
+dir=`mktemp -p . -d -t cr_parallel_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+
+DEBUG=0
+my_debug()
+{
+	if [ $DEBUG -eq 1 ]; then
+		echo $*
+	fi
+}
 
 cleanup()
 {
 	killall crcounter > /dev/null 2>&1
-	rm -rf d.* 2>&1
-}
-
-freeze()
-{
-	d="${freezermountpoint}/$1"
-	mkdir $d
-	while [ ! -d $d ]; do : ; done
-	echo $1 > $d/tasks
-	cat $d/tasks > /dev/null # make sure state is updated
-	echo FROZEN > $d/freezer.state
-	while [ `cat $d/freezer.state` != "FROZEN" ]; do
-		echo FROZEN > $d/freezer.state
-	done
-}
-
-unfreeze()
-{
-	echo THAWED > ${freezermountpoint}/$1/freezer.state
-	cat ${freezermountpoint}/$1/freezer.state > /dev/null
-	echo $1 > ${freezermountpoint}/tasks
-	cat ${freezermountpoint}/tasks > /dev/null
-	rmdir ${freezermountpoint}/$1
 }
 
 do_checkpoint()
 {
 	pid=$1
 	cnt=$2
-	freeze $pid
-	$CHECKPOINT $pid > d.$cnt/ckpt.out
-	unfreeze $pid
-	touch d.$cnt/ckptdone
+	# override $freezerdir to the child's private  dir
+	oldf=$freezerdir
+	freezerdir=$oldf/$cnt
+	freeze_pid $pid
+	$CHECKPOINT $pid > $dir/d.$cnt/ckpt.out
+	thaw
+	freezerdir=$oldf
+	touch $dir/d.$cnt/ckptdone
 }
 
 NUMJOBS=30
@@ -55,20 +42,20 @@ checkchildren()
 	kidsdone=0
 	file=$1
 	for child in `seq 1 $NUMJOBS`; do
-		if [ ! -f d.$child/$1 ]; then
-			echo "d.$child/$1 doesn't exist"
+		if [ ! -f $dir/d.$child/$1 ]; then
+			my_debug "$dir/d.$child/$1 doesn't exist"
 			return
 		fi
 		if [ "$1" == "ckptdone" ]; then
 			continue
 		fi
-		x=`cat d.$child/$1`
+		x=`cat $dir/d.$child/$1`
 		if [ "x$x" == "x" ]; then
-			echo "job $child has empty d.$child/$1"
+			my_debug "job $child has empty $dir/d.$child/$1"
 			return
 		fi
 		if [ "$x" == "BAD" ]; then
-			echo "job $child is still BAD"
+			my_debug "job $child is still BAD"
 			return
 		fi
 	done
@@ -78,9 +65,15 @@ checkchildren()
 
 cleanup
 
+# We want private freezer cgroups for each child job.  Create
+# those now
+for i in `seq 1 $NUMJOBS`; do
+	mkdir -p $freezerdir/$i
+done
+
 echo Starting original set of jobs in parallel
 for i in `seq 1 $NUMJOBS`; do
-	(mkdir -p d.$i; cd d.$i; ../crcounter )&
+	(mkdir -p $dir/d.$i; cd $dir/d.$i; ../../crcounter )&
 done
 
 settimer 5
@@ -116,7 +109,7 @@ canceltimer
 
 killall crcounter
 for i in `seq 1 $numjobs`; do
-	echo BAD > d.$i/counter_out
+	echo BAD > $dir/d.$i/counter_out
 done
 
 echo Waiting for all jobs to die
@@ -133,7 +126,7 @@ done
 echo Restarting all jobs in parallel
 
 for i in `seq 1 $NUMJOBS`; do
-	(cd d.$i; $RESTART --pids < ckpt.out) &
+	(cd $dir/d.$i; $RESTART --pids --copy-status < ckpt.out) &
 done
 
 settimer 10
@@ -152,7 +145,6 @@ if [ $numjobs -ne $NUMJOBS ]; then
 fi
 
 cleanup
-rm -f o.? o.??
 
 echo PASS
 exit 0

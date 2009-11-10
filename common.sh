@@ -8,7 +8,9 @@ verify_freezer()
 		exit 1
 	fi
 	freezermountpoint=`echo $line | awk '{ print $2 '}`
-	mkdir -p $freezermountpoint/1 > /dev/null 2>&1
+	freezerdir=`mktemp -p $freezermountpoint -d` || \
+		(echo "mktemp for freezer failed"; exit 1)
+	export freezerdir="$freezerdir"
 }
 
 verify_paths()
@@ -29,16 +31,37 @@ verify_paths
 
 freeze()
 {
-	d=${freezermountpoint}/1
+	if [ -z "$freezerdir" ]; then
+		$freezerdir=${freezermountpoint}/1
+	fi
+	d=$freezerdir
 	echo FROZEN > $d/freezer.state
 	while [ `cat $d/freezer.state` != "FROZEN" ]; do
 		echo FROZEN > $d/freezer.state
 	done
 }
 
+freeze_pid()
+{
+	if [ -z "$freezerdir" ]; then
+		$freezerdir=${freezermountpoint}/1
+	fi
+	if [ ! -d $freezerdir ]; then
+		# release agent may have nuked it
+		mkdir -p $freezerdir
+		while [ ! -d $freezerdir ]; do : ; done
+	fi
+	echo $1 > $freezerdir/tasks
+	cat $freezerdir/tasks > /dev/null  # make sure it updated
+	freeze
+}
+
 thaw()
 {
-	d=${freezermountpoint}/1
+	if [ -z "$freezerdir" ]; then
+		$freezerdir=${freezermountpoint}/1
+	fi
+	d=$freezerdir
 	echo THAWED > $d/freezer.state
 	cat $d/freezer.state > /dev/null
 }
