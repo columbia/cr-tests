@@ -73,8 +73,8 @@ fi
 ../ns_exec -ci ./create-shm -r -u $uid &
 do_checkpoint
 chown $uid ckpt.shm
-setcap cap_sys_admin+pe $RESTART --pids --copy-status
-cat ckpt.shm | su ltp -c $RESTART
+setcap cap_sys_admin+pe $RESTART
+cat ckpt.shm | ../mysu ltp $RESTART --pids --copy-status
 setcap -r $RESTART
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned shms"

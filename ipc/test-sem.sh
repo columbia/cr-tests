@@ -74,7 +74,7 @@ fi
 do_checkpoint
 chown $uid ckpt.sem
 setcap cap_sys_admin+pe $RESTART
-cat ckpt.sem | su ltp -c ${RESTART} --pids --copy-status
+cat ckpt.sem | ../mysu ltp ${RESTART} --pids --copy-status
 setcap -r $RESTART
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned sems"
