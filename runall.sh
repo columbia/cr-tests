@@ -56,6 +56,8 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+exit 0
+
 echo Running userid/namespace test
 pushd userns
 bash runtests.sh
