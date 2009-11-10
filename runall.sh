@@ -92,6 +92,15 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running ipc tests
+pushd ipc
+bash runtests.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 6
+fi
+popd
+
 exit 0
 
 echo Running userid/namespace test
@@ -100,15 +109,6 @@ bash runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 4
-fi
-popd
-
-echo Running ipc tests
-pushd ipc
-bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 6
 fi
 popd
 

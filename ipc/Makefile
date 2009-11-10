@@ -15,4 +15,4 @@ check-mq: check-mq.c ../clone.h $(SLIBS)
 	gcc -o check-mq check-mq.c $(LIBCMD)
 
 clean:
-	rm -rf $(targets) o.* ckpt.* sandbox
+	rm -rf $(targets) cr_sem* cr_mq* cr_shm*
