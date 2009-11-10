@@ -308,6 +308,11 @@ int main(int argc, char **argv)
 {
 	pid_t kids[N];
 	int i, excode = EXIT_FAILURE;
+	char *freezerdir;
+
+	if (argc < 2)
+		exit(1);
+	freezerdir = argv[1];
 
 	/* FIXME eventually stdio streams should be harmless */
 	close(0);
@@ -323,7 +328,7 @@ int main(int argc, char **argv)
 		goto exit_logs;
 	}
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", freezerdir, getpid())) {
 		log_error("move_to_cgroup");
 		goto exit_logs;
 	}

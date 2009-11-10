@@ -557,6 +557,11 @@ int main(int argc, char **argv)
 	struct sched_param proc_sched_param;
 	pid_t finished;
 	int i = 0, status = 0, excode;
+	char *freezerdir;
+
+	if (argc < 2)
+		exit(1);
+	freezerdir = argv[1];
 
 	/* FIXME eventually stdio streams should be harmless */
 	close(0);
@@ -609,7 +614,7 @@ int main(int argc, char **argv)
 
 	log("INFO", "running test with %d children\n", N);
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", freezerdir, getpid())) {
 		log_error("move_to_cgroup");
 		fclose(logfp);
 		exit(5);

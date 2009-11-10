@@ -39,6 +39,6 @@ pi: pi.c $(LIBS) Makefile
 
 clean:
 	rm -f *.o $(PROGS)
-	rm -rf log.* checkpoint-ready checkpoint-done
+	rm -rf cr_futex*
 	$(MAKE) -C libfutex clean
 	$(MAKE) -C ../libcrtest clean

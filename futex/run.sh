@@ -4,6 +4,9 @@ set -e
 
 source ../common.sh
 
+dir=`mktemp -p . -d -t cr_futex_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+
 #
 # Check if the running kernel supports futexes
 #
@@ -55,14 +58,15 @@ failed=0
 NUMTESTS=${#TESTS[@]}
 CURTEST=0
 
+cd $dir
 while [ $CURTEST -lt $NUMTESTS ]; do
 	T=${TESTS[$CURTEST]}
 	trap 'do_err; break' ERR EXIT
-	rm -f ./checkpoint-* TBROK
+	rm -f checkpoint-* TBROK
 	echo "Running test: ${T}"
-	./${T} &
+	../${T} `basename $freezerdir` &
 	TEST_PID=$!
-	while [ '!' -r "./checkpoint-ready" ]; do
+	while [ '!' -r "checkpoint-ready" ]; do
 		sleep 1
 	done
 	freeze
@@ -74,7 +78,7 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	err_msg="BROK"
 	thaw
 	trap 'do_err; break' ERR EXIT
-	touch "./checkpoint-done"
+	touch "checkpoint-done"
 	wait ${TEST_PID}
 	retval=$?
 	echo "Test ${T} done, returned $retval"
@@ -112,8 +116,6 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	wait
 done
 trap '' ERR EXIT
-
-rm -f ./checkpoint-{ready,done}
 
 # rmdir /cg/1
 # umount /cg

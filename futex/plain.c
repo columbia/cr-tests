@@ -111,9 +111,14 @@ int main(int argc, char **argv)
 {
 	pid_t kids[N];
 	int i, num_killed = 0, excode = EXIT_FAILURE;
+	char *freezerdir;
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		printf("Failed to move myself to cgroup /1\n");
+	if (argc < 2)
+		exit(1);
+	freezerdir = argv[1];
+
+	if (!move_to_cgroup("freezer", freezerdir, getpid())) {
+		printf("Failed to move myself to cgroup\n");
 		exit(1);
 	}
 	/* FIXME eventually stdio streams should be harmless */
