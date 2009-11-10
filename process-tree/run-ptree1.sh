@@ -1,15 +1,18 @@
 #!/bin/bash
 
-freezermountpoint=/cgroup
-BASE_DIR=".."
+source ../common.sh
 
-CHECKPOINT=`which checkpoint`
-RESTART=`which restart`
+dir=`mktemp -p . -d -t cr_ptree_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+cd $dir
+
+BASE_DIR="../.."
+
 FILEIO="../fileio/fileio1"
 
 ECHO="/bin/echo -e"
 
-TEST_CMD="./ptree1"
+TEST_CMD="../ptree1"
 
 # -n: children per process, -d: depth of process tree
 TEST_ARGS="-n 2 -d 1 -w sleep"
@@ -29,31 +32,6 @@ INPUT_DATA="input.data";
 NS_EXEC="$BASE_DIR/ns_exec"
 NS_EXEC_ARGS="-cgpuimP $TEST_PID_FILE"
 
-
-freeze()
-{
-	$ECHO "\t - Freezing $1"
-	fnam="${freezermountpoint}/$1/freezer.state"
-	$ECHO FROZEN > $fnam
-	while [ `cat $fnam` != "FROZEN" ]; do
-		$ECHO FROZEN > $fnam
-	done
-}
-
-unfreeze()
-{
-	$ECHO "\t - Unfreezing $1"
-	$ECHO THAWED > ${freezermountpoint}/$1/freezer.state
-}
-
-cleancgroup()
-{
-	$ECHO "\t - Clean cgroup of $1"
-	rmdir ${freezermountpoint}/$1
-	if [ -d ${freezermountpoint}/$1 ]; then
-		$ECHO ***** WARNING ${freezermountpoint}/$1 remains
-	fi
-}
 
 checkpoint()
 {
@@ -197,7 +175,12 @@ while [ $cnt -lt 15 ]; do
 	wait_for_checkpoint_ready
 	ps aux |grep $TEST_CMD >> $SCRIPT_LOG
 
-	freeze $pid
+	# override default freezerdir
+	if [ -d $freezerdir ]; then
+		rmdir $freezerdir
+	fi
+	freezerdir=$freezermountpoint/$pid
+	freeze_pid $pid
 
 	num_pids1=`ps aux |grep $TEST_CMD | wc -l`
 
@@ -211,11 +194,9 @@ while [ $cnt -lt 15 ]; do
 
 	killall -9 `basename $TEST_CMD`
 
-	unfreeze $pid
+	thaw
 
 	sleep 3
-
-	cleancgroup $pid
 
 	restore_fs_snapshot
 
@@ -243,10 +224,6 @@ while [ $cnt -lt 15 ]; do
 	ret=$?
 
 	$ECHO "\t- Container exited, status $ret"
-
-	if [ -d /cgroups/$pid ]; then
-		cleancgroup $pid
-	fi
 
 	cnt=$((cnt+1))
 done

@@ -1,7 +1,10 @@
 #!/bin/bash
 
-freezermountpoint=/cgroup
-CHECKPOINT=".."
+source ../common.sh
+
+dir=`mktemp -p . -d -t cr_pthread_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+cd $dir
 
 # NOTE: As of ckpt-v15-dev, the --container option to 'ckpt' causes this
 #	test to fail with "container not isolated" message due to the
@@ -11,7 +14,7 @@ CHECKPOINT="`which checkpoint` --container"
 RESTART=`which restart`
 ECHO="/bin/echo -e"
 
-TEST_CMD="./pthread1"
+TEST_CMD="../pthread1"
 TEST_ARGS="-n 4"			# -n: number of threads
 SCRIPT_LOG="log-run-pthread1"
 TEST_PID_FILE="pid.pthread1";
@@ -25,33 +28,8 @@ CHECKPOINT_DONE="checkpoint-done"
 
 LOGS_DIR="logs.d"
 
-NS_EXEC="../ns_exec"
+NS_EXEC="../../ns_exec"
 NS_EXEC_ARGS="-cgpuimP $TEST_PID_FILE"
-
-freeze()
-{
-	$ECHO "\t - Freezing $1"
-	fnam="${freezermountpoint}/$1/freezer.state"
-	$ECHO FROZEN > $fnam
-	while [ `cat $fnam` != "FROZEN" ]; do
-		$ECHO FROZEN > $fnam
-	done
-}
-
-unfreeze()
-{
-	$ECHO "\t - Unfreezing $1"
-	$ECHO THAWED > ${freezermountpoint}/$1/freezer.state
-}
-
-cleancgroup()
-{
-	$ECHO "\t - Clean cgroup of $1"
-	rmdir ${freezermountpoint}/$1
-	if [ -d ${freezermountpoint}/$1 ]; then
-		$ECHO ***** WARNING ${freezermountpoint}/$1 remains
-	fi
-}
 
 checkpoint()
 {
@@ -148,19 +126,24 @@ function restore_fs_snapshot()
 	/bin/cp ${SNAPSHOT_DIR}/* $LOGS_DIR
 }
 
-
-# Check freezer mount point
-line=`grep freezer /proc/mounts`
-if [ $? -ne 0 ]; then
-	$ECHO "please mount freezer cgroup"
-	$ECHO "  mkdir /cgroup"
-	$ECHO "  mount -t cgroup -o freezer cgroup /cgroup"
-	exit 1
-fi
-#freezermountpoint=`$ECHO $line | awk '{ print $2 '}`
-
 # Make sure no stray pthread1 from another run is still going
 killall $TEST_CMD > $SCRIPT_LOG 2>&1
+
+if [ ! -d $LOGS_DIR ]; then
+	mkdir $LOGS_DIR
+fi
+
+if [ ! -d $DATA_DIR ]; then
+	mkdir $DATA_DIR
+fi
+
+if [ ! -d $SNAPSHOT_DIR ]; then
+	mkdir $SNAPSHOT_DIR
+fi
+
+if [ ! -f $INPUT_DATA ]; then
+	$FILEIO -C $INPUT_DATA
+fi
 
 > $SCRIPT_LOG;
 cnt=1
@@ -179,7 +162,12 @@ while [ $cnt -lt 15 ]; do
 	wait_for_checkpoint_ready
 	ps aux |grep $TEST_CMD >> $SCRIPT_LOG
 
-	freeze $pid
+	# override default freezerdir
+	if [ -d $freezerdir ]; then
+		rmdir $freezerdir
+	fi
+	freezerdir=$freezermountpoint/$pid
+	freeze_pid $pid
 
 	num_pids1=`ps aux |grep $TEST_CMD | wc -l`
 
@@ -191,11 +179,9 @@ while [ $cnt -lt 15 ]; do
 
 	killall -9 `basename $TEST_CMD`
 
-	unfreeze $pid
+	thaw
 
 	sleep 3
-
-	cleancgroup $pid
 
 	restore_fs_snapshot
 
@@ -223,10 +209,6 @@ while [ $cnt -lt 15 ]; do
 	ret=$?
 
 	$ECHO "\t- Container exited, status $ret"
-
-	if [ -d /cgroups/$pid ]; then
-		cleancgroup $pid
-	fi
 
 	cnt=$((cnt+1))
 done

@@ -74,6 +74,15 @@ if [ $? -ne 0 ]; then
 fi
 popd
 
+echo Running process-tree tests
+pushd process-tree
+sh runtests.sh
+if [ $? -ne 0 ]; then
+	echo FAIL
+	exit 7
+fi
+popd
+
 exit 0
 
 echo Running userid/namespace test
@@ -100,15 +109,6 @@ bash runtests.sh
 if [ $? -ne 0 ]; then
 	echo FAIL
 	exit 6
-fi
-popd
-
-echo Running process-tree tests
-pushd process-tree
-sh runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 7
 fi
 popd
 
