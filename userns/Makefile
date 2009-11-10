@@ -1,4 +1,4 @@
-targets = userns_ckptme usertask sbits userns_deep simple_deep mysu
+targets = userns_ckptme usertask sbits userns_deep simple_deep
 
 SLIBS = ../libcrtest/libcrtest.a
 LIBCMD = -I../libcrtest -L../libcrtest $(SLIBS)
@@ -10,9 +10,6 @@ userns_ckptme: userns_ckptme.c ../clone.h $(SLIBS)
 
 usertask: usertask.c $(SLIBS)
 	gcc -o usertask usertask.c $(LIBCMD)
-
-mysu: mysu.c
-	gcc -o mysu mysu.c
 
 sbits: sbits.c $(SLIBS)
 	gcc -o sbits sbits.c $(LIBCMD)

@@ -1,7 +1,7 @@
 SUBDIRS = libcrtest counterloop fileio simple userns ipc sleep \
 	  process-tree futex epoll
 
-targets = ns_exec
+targets = ns_exec mysu
 
 all: $(targets)
 	for s in $(SUBDIRS) ; do \
