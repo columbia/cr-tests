@@ -91,7 +91,7 @@ for cnt in `seq 1 $NUMLOOPS`; do
 	wait $pid
 	wait_on_crcounter
 	echo BAD > counter_out
-	$RESTART < ./o.$cnt &
+	$RESTART --pids < ./o.$cnt &
 	while [ "`cat counter_out`" == "BAD" ]; do : ; done
 done
 

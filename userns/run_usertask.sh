@@ -29,7 +29,7 @@ freeze
 $CHECKPOINT $pid > ckpt.out
 thaw
 kill -9 $pid
-$RESTART < ckpt.out &
+$RESTART --pids < ckpt.out &
 touch sandbox/go
 
 settimer 5

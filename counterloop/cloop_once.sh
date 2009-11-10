@@ -71,7 +71,7 @@ unfreeze $pid
 kill $pid
 
 #../ns_exec -m $usercrdir/restart < ./o.1 &
-$RESTART < ./o.1 &
+$RESTART --pids < ./o.1 &
 
 echo "sleeping for 4 seconds to inc counter_out by less than last time"
 sleep 4

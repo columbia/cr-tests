@@ -26,7 +26,7 @@ do_yer_thang()
 	$CHECKPOINT $pid > out.$pid
 	thaw
 	killall sbits
-	$RESTART < out.$pid &
+	$RESTART --pids < out.$pid &
 	touch checkpointed
 
 	settimer 5

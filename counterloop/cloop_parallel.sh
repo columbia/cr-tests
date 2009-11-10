@@ -133,7 +133,7 @@ done
 echo Restarting all jobs in parallel
 
 for i in `seq 1 $NUMJOBS`; do
-	(cd d.$i; $RESTART < ckpt.out) &
+	(cd d.$i; $RESTART --pids < ckpt.out) &
 done
 
 settimer 10

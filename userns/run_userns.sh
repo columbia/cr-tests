@@ -19,8 +19,14 @@ $CHECKPOINT $job > o.userns
 thaw
 killall userns_ckptme
 
+ret=0
+while [ $ret -eq 0 ]; do
+	pidof userns_ckptme > /dev/null 2>&1
+	ret=$?
+done
 echo "Restarting jobs"
-$RESTART < o.userns &
+/bin/rm -f /tmp/rlog
+$RESTART --pids -l /tmp/rlog < o.userns &
 
 touch sandbox/go
 touch sandbox/die

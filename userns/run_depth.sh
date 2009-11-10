@@ -20,7 +20,7 @@ thaw
 killall userns_deep
 
 echo "Restarting jobs"
-$RESTART < o.deep &
+$RESTART --pids < o.deep &
 
 touch sandbox/go
 touch sandbox/die

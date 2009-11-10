@@ -19,7 +19,7 @@ thaw
 killall simple_deep
 
 echo "Restarting jobs"
-$RESTART < o.simple &
+$RESTART --pids < o.simple &
 
 touch sandbox/go
 touch sandbox/die
@@ -40,7 +40,7 @@ echo "Creating checkpoint image as root"
 echo "Trying to restart that as uid 500.  Should fail"
 chown $uid out /tmp/cr-test*
 setcap cap_sys_admin+pe $RESTART
-cat out | ./mysu ltp $RESTART
+cat out | ./mysu ltp $RESTART --pids --copy-status
 ret=$?
 setcap -r $RESTART
 if [ $ret -eq 0 ]; then

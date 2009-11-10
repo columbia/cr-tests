@@ -32,7 +32,7 @@ clean_all
 ../ns_exec -ci ./create-sem &
 do_checkpoint
 # Restart it.  If it finds the sem it created, it creates sem-ok
-$RESTART < ckpt.sem
+$RESTART --pids < ckpt.sem
 if [ ! -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was not re-created"
 	exit 1
@@ -44,7 +44,7 @@ clean_all
 ../ns_exec -ci ./create-sem -u 501 &
 do_checkpoint
 # restart should fail to create sems
-$RESTART < ckpt.sem
+$RESTART --pids < ckpt.sem
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was re-created"
 	exit 1
@@ -57,7 +57,7 @@ clean_all
 ../ns_exec -ci ./create-sem -e -u 501 &
 do_checkpoint
 # restart should be able to create sems
-$RESTART < ckpt.sem
+$RESTART --pids < ckpt.sem
 if [ ! -f sandbox/sem-ok ]; then
 	echo "Fail: sysv sem was not re-created"
 	exit 1
@@ -74,7 +74,7 @@ fi
 do_checkpoint
 chown $uid ckpt.sem
 setcap cap_sys_admin+pe $RESTART
-cat ckpt.sem | su ltp -c ${RESTART}
+cat ckpt.sem | su ltp -c ${RESTART} --pids --copy-status
 setcap -r $RESTART
 if [ -f sandbox/sem-ok ]; then
 	echo "Fail: uid $uid managed to recreate root-owned sems"

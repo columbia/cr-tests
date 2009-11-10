@@ -32,7 +32,7 @@ clean_all
 ../ns_exec -ci ./create-shm &
 do_checkpoint
 # Restart it.  If it finds the shm it created, it creates shm-ok
-$RESTART < ckpt.shm
+$RESTART --pids < ckpt.shm
 if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
 	exit 1
@@ -44,7 +44,7 @@ clean_all
 ../ns_exec -ci ./create-shm -u 501 &
 do_checkpoint
 # restart should fail to create shm
-$RESTART < ckpt.shm
+$RESTART --pids < ckpt.shm
 if [ -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was re-created"
 	exit 1
@@ -57,7 +57,7 @@ clean_all
 ../ns_exec -ci ./create-shm -e -u 501 &
 do_checkpoint
 # restart should be able to create shm
-$RESTART < ckpt.shm
+$RESTART --pids < ckpt.shm
 if [ ! -f sandbox/shm-ok ]; then
 	echo "Fail: sysv shm was not re-created"
 	exit 1
@@ -73,7 +73,7 @@ fi
 ../ns_exec -ci ./create-shm -r -u $uid &
 do_checkpoint
 chown $uid ckpt.shm
-setcap cap_sys_admin+pe $RESTART
+setcap cap_sys_admin+pe $RESTART --pids --copy-status
 cat ckpt.shm | su ltp -c $RESTART
 setcap -r $RESTART
 if [ -f sandbox/shm-ok ]; then

@@ -93,7 +93,7 @@ echo THAWED > "$cgroup/freezer.state"
 wait
 
 echo "Restarting from $ckptfile."
-$RESTART < $ckptfile &
+$RESTART --pids < $ckptfile &
 
 touch $step2go
 
