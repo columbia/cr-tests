@@ -61,21 +61,26 @@ const struct option long_options[] = {
 	{ "label",		1, 0, 'l'},
 	{ "num",		1, 0, 'n'},
 	{ "cgroup2",		2, 0, 'c'},
+	{ "freezer",		1, 0, 'f'},
 	{0, 0, 0, 0},
 };
 
 char *cgroup2 = NULL;
+char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
 	ckpt_label = last_label;
 	ckpt_op_num = num_labels;
 	while (1) {
-		char c;
-		c = getopt_long(argc, argv, "LNhl:n:c::", long_options, NULL);
+		int c;
+		c = getopt_long(argc, argv, "f:LNhl:n:c::", long_options, NULL);
 		if (c == -1)
 			break;
 		switch(c) {
+			case 'f':
+				freezer = optarg;
+				break;
 			case 'L':
 				print_labels(stdout);
 				exit(EXIT_SUCCESS);
@@ -152,7 +157,7 @@ int main(int argc, char **argv)
 		log_error("dup2(logfp, 2)");
 		goto out;
 	}
-	if (!move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
 		log_error("move_to_cgroup");
 		exit(2);
 	}

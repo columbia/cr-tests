@@ -37,7 +37,7 @@ void usage(FILE *pout)
 "\t-n\tWait for checkpoint at NUM.\n"
 "\n"
 "You may only specify one LABEL or NUM and you may not specify both.\n"
-"Label numbers are integers in the range 0-%d\n"
+"Label numbers are integers in the range 0-%ld\n"
 "Valid label numbers and their corresponding LABELs are:\n", num_labels - 1);
 	print_labels(pout);
 }
@@ -48,25 +48,32 @@ const struct option long_options[] = {
 	{ "help",		0, 0, 'h'},
 	{ "label",		1, 0, 'l'},
 	{ "num",		1, 0, 'n'},
+	{ "freezer",		1, 0, 'f'},
 	{0, 0, 0, 0},
 };
+
+char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
 	ckpt_label = last_label;
 	ckpt_op_num = num_labels;
 	while (1) {
-		char c;
-		c = getopt_long(argc, argv, "LNhl:n:", long_options, NULL);
+		int c;
+		c = getopt_long(argc, argv, "f:LNhl:n:", long_options, NULL);
 		if (c == -1)
 			break;
 		switch(c) {
+			case 'f':
+				freezer = optarg;
+				printf("Will enter freezer cgroup %s\n", freezer);
+				break;
 			case 'L':
 				print_labels(stdout);
 				exit(EXIT_SUCCESS);
 				break;
 			case 'N':
-				printf("%d\n", num_labels - 1);
+				printf("%ld\n", num_labels - 1);
 				exit(EXIT_SUCCESS);
 				break;
 			case 'h':
@@ -80,7 +87,7 @@ void parse_args(int argc, char **argv)
 				if ((sscanf(optarg, "%d", &ckpt_op_num) < 1) ||
 				    (ckpt_op_num < 0) ||
 				    (ckpt_op_num >= num_labels)) {
-					fprintf(stderr, "Option -n requires an argument in the range 0-%d. Got %d\n", num_labels - 1, ckpt_op_num);
+					fprintf(stderr, "Option -n requires an argument in the range 0-%ld. Got %d\n", num_labels - 1, ckpt_op_num);
 					usage(stderr);
 					exit(EXIT_FAILURE);
 				}
@@ -121,10 +128,11 @@ int main (int argc, char **argv)
 		log_error("dup2(logfp, 2)");
 		goto out;
 	}
-	if (!move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
 		log_error("move_to_cgroup");
 		exit(2);
 	}
+	printf("entered cgroup %s\n", freezer);
 
 label(create,
 	efd, epoll_create(1));

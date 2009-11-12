@@ -2,6 +2,9 @@
 
 
 source ../common.sh
+dir=`mktemp -p . -d -t cr_epoll_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+cd $dir
 
 #
 # Check if the running kernel supports epoll
@@ -51,14 +54,15 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 		((IMAX = $(./${T} -N)))
 		((I = 0))
 		echo "INFO: Test ${T} does:"
-		./${T} -h | sed -e 's/^/INFO:/'
+		../${T} -h | sed -e 's/^/INFO:/'
 	fi
-	TLABEL=$(./${T} -L | head -n +$((I + 2)) | tail -n 1 | cut -f 3)
+	TLABEL=$(../${T} -L | head -n +$((I + 2)) | tail -n 1 | cut -f 3)
 	TARGS=( "-l" "${TLABEL}" )
 	trap 'do_err; break' ERR EXIT
 	rm -f ./checkpoint-{ready,done} TBROK
 	echo "Running test: ${T} -l ${TLABEL}"
-	./${T} ${TARGS[@]} &
+	mkdir -p $freezerdir
+	../${T} ${TARGS[@]} -f `basename $freezerdir` &
 	TEST_PID=$!
 	while [ '!' -r "./checkpoint-ready" ]; do
 		sleep 1
@@ -112,9 +116,6 @@ done
 trap '' ERR EXIT
 
 # TODO add scm testcase to run.sh
-
-rm -f ./checkpoint-{ready,done}
-
 
 # rmdir /cg/1
 # umount /cg

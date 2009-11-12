@@ -20,5 +20,5 @@ $(PROGS): %: %.c $(LIBS)
 
 clean:
 	rm -f $(PROGS) libeptest.[ao]
-	rm -rf log.* checkpoint-*
 	$(MAKE) -C ../libcrtest clean
+	rm -rf cr_epoll*
