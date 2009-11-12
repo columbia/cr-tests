@@ -22,8 +22,6 @@ smackload() {
 }
 
 source ../common.sh
-verify_freezer
-verify_paths
 
 smackload
 
@@ -41,7 +39,6 @@ if [ -z "$context" -o "$context" != "vs2" ]; then
 	echo "FAIL: did not maintain context vs2 on restart"
 	exit 1
 fi
-thaw
 echo "PASS"
 
 echo "Test 2: can we restore contexts on restart"
@@ -52,7 +49,6 @@ if [ -z "$context" -o "$context" != "vs1" ]; then
 	echo "(was $context)"
 	exit 1
 fi
-thaw
 echo "PASS"
 
 capsh=`which capsh`
