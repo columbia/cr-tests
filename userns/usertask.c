@@ -21,7 +21,8 @@
 
 int usage(char *whoami)
 {
-	printf("Usage: %s [-u uid] [-g gid]\n", whoami);
+	printf("Usage: %s [-f freezer] [-u uid] [-g gid]\n", whoami);
+	printf("  freezer is the freezer cgroup to join, defaut '1'\n");
 	printf("  uid is the uid to run as.  If unspecified, use 501\n");
 	printf("  gid is the gid to run as.  If unspecified, use 501\n");
 	printf("  output file is always 'outfile'\n");
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
 	pid_t pid = getpid();
 	FILE *file;
 	int uid=501, gid=501;
+	char *freezer = "1";
 	int ret = 0;
 	int opt;
 	int fd;
@@ -65,8 +67,11 @@ int main(int argc, char *argv[])
 	unlink("ckpt.out");
 	unlink("outfile");
 
-	while ((opt = getopt(argc, argv, "u:g:")) != -1) {
+	while ((opt = getopt(argc, argv, "f:u:g:")) != -1) {
 		switch (opt) {
+		case 'f':
+			freezer = optarg;
+			break;
 		case 'u':
 			uid = atoi(optarg);
 			break;
@@ -78,8 +83,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		printf("Couldn't switch to cgroup /1\n");
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
+		printf("Couldn't switch to cgroup %s\n", freezer);
 		exit(1);
 	}
 

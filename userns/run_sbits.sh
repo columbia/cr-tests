@@ -3,8 +3,11 @@
 # Author: Serge Hallyn
 
 source ../common.sh
-verify_freezer
-verify_paths
+
+dir=`mktemp -p . -d -t cr_sbits_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+
+cd $dir
 
 delfiles()
 {
@@ -84,30 +87,34 @@ parse_output()
 	done	
 }
 
+freezer=`basename $freezerdir`
 rm -f outfile
 killall sbits
 # run without changing securebits
 delfiles
 echo "Test 1: no securebits" >> outfile
-./sbits &
+../sbits -f $freezer &
 do_yer_thang
 
 # run with keepcaps set
 delfiles
 echo "Test 2: with keepcaps" >> outfile
-./sbits -k &
+mkdir -p $freezerdir
+../sbits -k -f $freezer &
 do_yer_thang
 
 # run with noroot
 delfiles
 echo "Test 3: with noroot" >> outfile
-./sbits -r &
+mkdir -p $freezerdir
+../sbits -r -f $freezer &
 do_yer_thang
 
 # run with noroot locked
 delfiles
 echo "Test 4: with noroot locked" >> outfile
-./sbits -r -l &
+mkdir -p $freezerdir
+../sbits -r -l -f $freezer &
 do_yer_thang
 
 parse_output

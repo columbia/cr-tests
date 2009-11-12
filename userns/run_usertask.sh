@@ -3,23 +3,26 @@
 # Author: Serge Hallyn
 
 source ../common.sh
+dir=`mktemp -p . -d -t cr_usertask_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+chmod go+rx $dir
+cd $dir
 
 # We are playing with perms on /root, so make sure to clean up
 # on exit
 rootmode=`stat -c %a /root`
 trap '\
 set +eu ; set -x ; \
-echo THAWED > "${freezermountpoint}/1/freezer.state" ; \
+echo THAWED > "$freezerdir/freezer.state" ; \
 chmod $rootmode /root' EXIT
 
 chmod 750 /root
 
-rm -rf sandbox
 mkdir sandbox
 chown 501:501 sandbox
 echo "Running usertask"
 killall usertask
-./usertask &
+../usertask -f `basename $freezerdir` &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer

@@ -3,11 +3,14 @@
 # Author: Serge Hallyn
 
 source ../common.sh
+dir=`mktemp -p . -d -t cr_userns_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+chmod go+rx $dir
+cd $dir
 
-rm -rf sandbox pidfile
 mkdir sandbox
 chown 500:500 sandbox
-./userns_ckptme &
+../userns_ckptme `basename $freezerdir` &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer
@@ -25,8 +28,7 @@ while [ $ret -eq 0 ]; do
 	ret=$?
 done
 echo "Restarting jobs"
-/bin/rm -f /tmp/rlog
-$RESTART --pids -l /tmp/rlog < o.userns &
+$RESTART --pids < o.userns &
 
 touch sandbox/go
 touch sandbox/die

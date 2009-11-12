@@ -4,10 +4,14 @@
 
 source ../common.sh
 
-rm -rf sandbox
+dir=`mktemp -p . -d -t cr_depth_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using directory $dir"
+chmod go+rx $dir
+cd $dir
+
 mkdir sandbox
 chown 500:500 sandbox
-./userns_deep &
+../userns_deep `basename $freezerdir` &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer
@@ -20,7 +24,7 @@ thaw
 killall userns_deep
 
 echo "Restarting jobs"
-$RESTART --pids < o.deep &
+$RESTART --pids --copy-status < o.deep &
 
 touch sandbox/go
 touch sandbox/die

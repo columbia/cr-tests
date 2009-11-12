@@ -3,10 +3,13 @@
 # Author: Serge Hallyn
 
 source ../common.sh
+dir=`mktemp -p . -d -t cr_simple_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+chmod go+rx $dir
+cd $dir
 
-rm -rf sandbox
 mkdir sandbox
-./simple_deep &
+../simple_deep `basename $freezerdir` &
 settimer 5
 while [ ! -f sandbox/started ]; do : ; done
 canceltimer
@@ -35,12 +38,12 @@ if [ $uid -eq -1 ]; then
 	exit 0
 fi
 echo "Creating checkpoint image as root"
-../simple/ckpt > out
+../../simple/ckpt sandbox
 
 echo "Trying to restart that as uid 500.  Should fail"
-chown $uid out /tmp/cr-test*
+chown $uid sandbox/out sandbox/cr-test*
 setcap cap_sys_admin+pe $RESTART
-cat out | ../mysu ltp $RESTART --pids --copy-status
+cat sandbox/out | ../../mysu ltp $RESTART --pids --copy-status
 ret=$?
 setcap -r $RESTART
 if [ $ret -eq 0 ]; then

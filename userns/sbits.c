@@ -35,10 +35,11 @@
 
 void usage(char *me)
 {
-	printf("Usage: %s [-k] [-r] [-l]\n", me);
+	printf("Usage: %s [-f name] [-k] [-r] [-l]\n", me);
 	printf("  -k: set keepcaps\n");
 	printf("  -r: set SECURE_NOROOT and SECURE_NO_SETUID_FIXUP\n");
 	printf("  -l: lock the -r state\n");
+	printf("  -f <name>: freezer cgroup to enter ('1' by default)\n");
 	exit(1);
 }
 
@@ -63,22 +64,24 @@ int main(int argc, char *argv[])
 {
 	int keepcaps = 0, noroot = 0, locked = 0;
 	int bits;
+	char *freezer = "1";
 	FILE *fout;
 	int c;
 
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		printf("Failed to move myself to cgroup /1\n");
-		exit(1);
-	}
-
-	while ((c = getopt(argc, argv, "krl")) != -1) {
+	while ((c = getopt(argc, argv, "krlf:")) != -1) {
 		switch(c) {
 		case 'k': keepcaps = 1; break;
 		case 'r': noroot = 1; break;
 		case 'l': locked = 1; break;
+		case 'f': freezer = optarg; break;
 		default:
 			usage(argv[0]);
 		}
+	}
+
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
+		printf("Failed to move myself to cgroup /1\n");
+		exit(1);
 	}
 
 	bits = prctl(PR_GET_SECUREBITS);

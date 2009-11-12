@@ -23,3 +23,4 @@ simple_deep: simple_deep.c $(SLIBS)
 clean:
 	rm -rf $(targets) o.* psout* sandbox ckpt.out out.* outfile
 	rm -rf checkpointed finished started pidfile
+	rm -rf cr_depth* cr_sbits* cr_simple* cr_userns* cr_usertask*

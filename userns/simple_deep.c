@@ -78,10 +78,15 @@ int do_clone(long depth)
 
 int main(int argc, char *argv[])
 {
+	char *freezer = "1";
+
+	if (argc > 1)
+		freezer = argv[1];
+
 	printf("%d\n", getpid());
 	fflush(stdout);
-	if (!move_to_cgroup("freezer", "1", getpid())) {
-		printf("Failed to move myself to cgroup /1\n");
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
+		printf("Failed to move myself to cgroup %s\n", freezer);
 		exit(1);
 	}
 	close(0);
