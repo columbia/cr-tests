@@ -19,4 +19,5 @@ $(PROGS): %: %.c $(LIBS)
 	gcc -Wall $(CFLAGS) -o $@ $< $(LIBS)
 
 clean:
-	rm -f *.o libeptest.a log.* checkpoint-* $(PROGS)
+	rm -f *.o libeptest.a $(PROGS)
+	rm -rf cr_eventfd*

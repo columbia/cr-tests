@@ -730,7 +730,14 @@ void help(void)
 	usage(stdout);
 }
 
+char *freezer = "1";
+
 option_t ckpt_opts[] = {
+	{
+		.option = "f:",
+		.flag	= NULL,
+		.arg	= freezer,
+	},
 	{
 		.option = "L",
 		.flag   = &opt_do_print_labels,
@@ -811,7 +818,7 @@ int main(int argc, char **argv)
 		log_error("dup2(logfp, 2)");
 		goto out;
 	}
-	if (!move_to_cgroup("freezer", "1", getpid())) {
+	if (!move_to_cgroup("freezer", freezer, getpid())) {
 		log_error("move_to_cgroup");
 		goto out;
 	}

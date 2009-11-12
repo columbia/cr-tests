@@ -2,6 +2,9 @@
 
 
 source ../common.sh
+dir=`mktemp -p . -d -t cr_eventfd_XXXXXXX` || (echo "mktemp failed"; exit 1)
+echo "Using output dir $dir"
+cd $dir
 
 #
 # Check if the running kernel supports eventfd
@@ -44,17 +47,17 @@ failed=0
 NUMTESTS=${#TESTS[@]}
 for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 	T=${TESTS[$CURTEST]}
-	((IMAX = $(./${T} -N)))
+	((IMAX = $(../${T} -N)))
 	echo "INFO: Test ${T} does:"
-	./${T} -D | sed -e 's/^/INFO:/'
-	./${T} -L | sed -e 's/^/INFO:/'
+	../${T} -D | sed -e 's/^/INFO:/'
+	../${T} -L | sed -e 's/^/INFO:/'
 
-	TEST_LABELS=( $(./${T} -L | tail -n '+2' | cut -f 3) )
+	TEST_LABELS=( $(../${T} -L | tail -n '+2' | cut -f 3) )
 
 	# First we run the test taking checkpoints at all the labelled points
 	rm -f "./checkpoint-"{ready,done,skip}
 	echo "Running test: \"${T}\""
-	./${T} &
+	../${T} &
 	TEST_PID=$!
 
 	trap 'do_err; break 2' ERR EXIT
