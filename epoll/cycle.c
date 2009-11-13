@@ -62,8 +62,8 @@ char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
-	ckpt_label = last_label;
-	ckpt_op_num = num_labels;
+	ckpt_op_num = num_labels - 1;
+	ckpt_label = labels[ckpt_op_num];
 	while (1) {
 		int c;
 		c = getopt_long(argc, argv, "f:LNhl:n:s:c:", long_options, NULL);
@@ -121,13 +121,6 @@ void parse_args(int argc, char **argv)
 	}
 }
 
-/*
- * A LABEL is a point in the program we can goto where it's interesting to
- * checkpoint. These enable us to have a set of labels that can be specified
- * on the commandline.
- */
-const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
-
 int main(int argc, char **argv)
 {
 	char rbuf[128];
@@ -136,7 +129,7 @@ int main(int argc, char **argv)
 	int pfd[2];
 	int efd[3];
 	int ec = EXIT_FAILURE;
-	int ret, i;
+	int ret, i, j;
 
 	parse_args(argc, argv);
 
@@ -168,29 +161,27 @@ int main(int argc, char **argv)
 	    pfd[0], pfd[1]);
 
 label(create_efd, ret, ret + 0);
+	ev.events = EPOLLOUT|EPOLLIN|EPOLLET;
 	for (i = 0; i < num_efd; i++) {
-		efd[i] = epoll_create(3);
-		if (ret < 0) {
+		efd[i] = epoll_create(4);
+		if (efd[i] < 0) {
 			log("FAIL", "efd[i] = epoll_create(3);");
+			ret = efd[i];
 			goto out;
 		}
-	}
-
-label(link_cycle, ret, ret + 0);
-	/* Link the epoll fds together into a simple cycle */
-	ev.events = EPOLLOUT|EPOLLIN|EPOLLET;
-	for (--i; i >= 0; i--) {
-		ev.data.fd = efd[i + 1];
+		if (i == 0)
+			continue;
+		ev.data.fd = efd[i - 1];
 		ret = epoll_ctl(efd[i], EPOLL_CTL_ADD, ev.data.fd, &ev);
 		if (ret < 0) {
-			log("FAIL", "epoll_ctl(efd[i], EPOLL_CTL_ADD, ev.data.fd, &ev);");
+			log("FAIL", "epoll_ctl(efd[i] (%d), EPOLL_CTL_ADD, ev.data.fd (%d), &ev);", efd[i], ev.data.fd);
 			goto out;
 		}
 	}
 
 	/* Close the cycle */
-	ev.data.fd = 0;
-	ret = epoll_ctl(efd[num_efd - 1], EPOLL_CTL_ADD, ev.data.fd, &ev);
+	ev.data.fd = efd[num_efd - 1];
+	ret = epoll_ctl(efd[0], EPOLL_CTL_ADD, ev.data.fd, &ev);
 	if (ret < 0) {
 		log("FAIL",
 		"epoll_ctl(efd[num_efd - 1], EPOLL_CTL_ADD, ev.data.fd, &ev);");
@@ -203,7 +194,7 @@ label(link_pipe, ret, ret + 0);
 	 *
 	 * /---------------------------------\
 	 * |                                 |
-	 * \-> efd[0] --> efd[1] --> efd[2] -/
+	 * \- efd[0] <-- efd[1] <-- efd[2] <-/
 	 *                            | |
 	 *                            | \--> pfd[0]
 	 *                            \----> pfd[1]
@@ -227,47 +218,43 @@ label(link_pipe, ret, ret + 0);
 		goto out;
 	}
 
-	ev.events = 0;
-label(wait_write,
-	ret, epoll_wait(efd[0], &ev, 1, 1000));
-	if (ret != 1) {
-		log_error("Expected epoll_wait() to return an event.\n");
-		goto out;
-	}
-
+label(wait_write, ret, ret + 0);
 	/*
 	 * Since it's a cycle of epoll sets, we have to wait on the
 	 * other epoll sets to get the event that triggered EPOLLIN
-	 * on this set.
+	 * on this set. Start with the epoll fd which will take us the
+	 * long way around the cycle: efd[num_efd - 2].
 	 */
-	for (i = 1; i < num_efd; i++) {
-		if (!(ev.events & EPOLLIN)) {
-			log("FAIL", "Expected EPOLLIN (0x%X) flag, got %s (0x%X)\n",
-				  EPOLLOUT, eflags(ev.events), ev.events);
-			goto out;
-		}
-		if (ev.data.fd != efd[i]) {
-			log("FAIL", "Expected event fd == %d, got %d\n",
-				  efd[i], ev.data.fd);
-			goto out;
-		}
+
+	/* The index of the previous epoll fd in the cycle */
+	j = num_efd - 1;
+	for (i = num_efd - 2; i > -1; i--) {
+		/* The index of the previous epoll fd in the cycle */
+		j = (unsigned int)(i - 1) % ~(num_efd - 1);
+		log("INFO", "Waiting on %d for EPOLLIN on %d\n", efd[i], efd[j]);
 		ret = epoll_wait(efd[i], &ev, 1, 1000);
+		if (ret != 1) {
+			log_error("Expected epoll_wait() to return an event.\n");
+			goto out;
+		}
+		log("INFO", "Got event: fd: %d eflags: %s\n", ev.data.fd, eflags(ev.events));
+		if ((ev.data.fd != efd[j]) || !(ev.events & EPOLLIN))
+			goto out;
 	}
+
 	/*
 	 * Now we expect the actual event indicating it's ok to write
 	 * output.
 	 */
-	if (!(ev.events & EPOLLOUT)) {
-		log("FAIL", "Expected EPOLLOUT (0x%X) flag, got %s (0x%X)\n",
-			  EPOLLOUT, eflags(ev.events), ev.events);
+	log("INFO", "Waiting on %d for EPOLLOUT on %d\n", efd[j], pfd[1]);
+	ret = epoll_wait(efd[j], &ev, 1, 1000);
+	if (ret != 1) {
+		log_error("Expected epoll_wait() to return an event.\n");
 		goto out;
 	}
-	if (ev.data.fd != pfd[1]) {
-		log("FAIL", "Expected event fd == %d, got %d\n",
-			  pfd[1], ev.data.fd);
+	log("INFO", "Got event: fd: %d eflags: %s\n", ev.data.fd, eflags(ev.events));
+	if ((ev.data.fd != pfd[1]) || !(ev.events & EPOLLOUT))
 		goto out;
-	}
-
 label(do_write,
 	ret, write(pfd[1], HELLO, strlen(HELLO) + 1));
 	if (ret < (strlen(HELLO) + 1)) {
@@ -276,22 +263,31 @@ label(do_write,
 		goto out;
 	}
 
-label(wait_read,
-	ret, epoll_wait(efd[i], &ev, 1, 1000));
+label(wait_read, ret, ret + 0);
+	/* The index of the previous epoll fd in the cycle */
+	j = num_efd - 1;
+	for (i = num_efd - 2; i > -1; i--) {
+		/* The index of the previous epoll fd in the cycle */
+		j = (unsigned int)(i - 1) % ~(num_efd - 1);
+		log("INFO", "Waiting on %d for EPOLLIN on %d\n", efd[i], efd[j]);
+		ret = epoll_wait(efd[i], &ev, 1, 1000);
+		if (ret != 1) {
+			log_error("Expected epoll_wait() to return an event.\n");
+			goto out;
+		}
+		log("INFO", "Got event: fd: %d eflags: %s\n", ev.data.fd, eflags(ev.events));
+		if ((ev.data.fd != efd[j]) || !(ev.events & EPOLLIN))
+			goto out;
+	}
+	log("INFO", "Waiting on %d for EPOLLIN on %d\n", efd[j], pfd[0]);
+	ret = epoll_wait(efd[j], &ev, 1, 1000);
 	if (ret != 1) {
 		log_error("Expected epoll_wait() to return an event.\n");
 		goto out;
 	}
-	if (!(ev.events & EPOLLIN)) {
-		log("FAIL", "Expected EPOLLIN (0x%X) flag, got %s (0x%X)\n",
-			  EPOLLIN, eflags(ev.events), ev.events);
+	log("INFO", "Got event: fd: %d eflags: %s\n", ev.data.fd, eflags(ev.events));
+	if ((ev.data.fd != pfd[0]) || !(ev.events & EPOLLIN))
 		goto out;
-	}
-	if (ev.data.fd != pfd[0]) {
-		log("FAIL", "Expected event fd == %d, got %d\n",
-			  pfd[0], ev.data.fd);
-		goto out;
-	}
 
 label(do_read, ret, ret + 0);
 	ret = read(pfd[0], rbuf, strlen(HELLO) + 1);
@@ -313,7 +309,7 @@ label(do_read, ret, ret + 0);
 out:
 	if (op_num != INT_MAX) {
 		log("FAIL", "error at label %s (op num: %d)\n",
-			  labels(op_num), op_num);
+			  labels[op_num], op_num);
 	}
 	for (i = 0; i < num_efd; i++) {
 		ret = close(efd[i]);
@@ -329,5 +325,3 @@ out:
 	fclose(logfp);
 	exit(ec);
 }
-
-const char __attribute__((__section__(".LABELs"))) *last_label  = "<end>";

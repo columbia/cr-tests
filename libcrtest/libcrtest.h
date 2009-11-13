@@ -1,3 +1,5 @@
+#ifndef LIBCRTEST_H
+#define LIBCRTEST_H 1
 
 #define CKPT_READY		"checkpoint-ready"
 #define CKPT_DONE		"checkpoint-done"
@@ -20,3 +22,5 @@ extern void copy_data(char *srcfile, char *destfile);
 extern char *freezer_mountpoint(void);
 /* right now, subsys must always be "freezer" */
 extern int move_to_cgroup(char *subsys, char *grp, int pid);
+
+#endif /* LIBCRTEST_H */

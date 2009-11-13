@@ -38,6 +38,7 @@ function do_err()
        fi
        echo "${err_msg}"
        ((failed++))
+       thaw || /bin/true
        wait
 }
 
@@ -68,18 +69,16 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 		sleep 1
 	done
 	freeze
-	trap 'thaw; do_err; break' ERR EXIT
 	sync
-	cp log.${T} log.${T}${LABEL}.pre-ckpt
+	cp log.${T} log.${T}${TLABEL}.pre-ckpt
 	err_msg="FAIL"
-	${CHECKPOINT} ${TEST_PID} > checkpoint-${T}${LABEL}
+	${CHECKPOINT} ${TEST_PID} > checkpoint-${T}${TLABEL}
 	err_msg="BROK"
 	thaw
-	trap 'do_err; break' ERR EXIT
 	touch "./checkpoint-done"
 	wait ${TEST_PID}
 	retval=$?
-	echo "Test ${T}${LABEL} done, returned ${retval}"
+	echo "Test ${T}${TLABEL} done, returned ${retval}"
 	if [ -f "TBROK" ]; then
 		echo "BROK: epoll snafu, re-running this test"
 		continue
@@ -90,18 +89,18 @@ while [ $CURTEST -lt $NUMTESTS ]; do
 	echo "PASS ${T} ${TLABEL} original"
 
 	# now try restarting
-	mv log.${T} log.${T}${LABEL}.post-ckpt
-	cp log.${T}${LABEL}.pre-ckpt log.${T}
+	mv log.${T} log.${T}${TLABEL}.post-ckpt
+	cp log.${T}${TLABEL}.pre-ckpt log.${T}
 	err_msg="FAIL"
 	# --copy-status ensures that we trap on error.
-	${RESTART} --copy-status < checkpoint-${T}${LABEL}
+	${RESTART} --copy-status < checkpoint-${T}${TLABEL}
 	retval=$?
 	err_msg="FAIL"
 	[ ${retval} -eq 0 ];
 	echo "PASS ${T} ${TLABEL} restart"
 	err_msg="BROK"
-	if [ ! -f log.${T}${LABEL} ]; then
-		mv log.${T} log.${T}${LABEL}
+	if [ ! -f log.${T}${TLABEL} ]; then
+		mv log.${T} log.${T}${TLABEL}
 	fi
 	trap '' ERR EXIT
 

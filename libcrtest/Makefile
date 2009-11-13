@@ -1,11 +1,11 @@
+TARGETS := libcrtest.a
+all: $(TARGETS)
 
-all: libcrtest.a
+common.o: libcrtest.h
+labels.o: labels.h
 
-common.o: libcrtest.h common.c
-	cc $(CFLAGS) -c common.c
-
-libcrtest.a: common.o
-	ar cr libcrtest.a common.o
+libcrtest.a: common.o labels.o
+	ar cr $@ $^
 
 clean:
-	rm -f common.o libcrtest.a
+	rm -f *.o $(TARGETS)

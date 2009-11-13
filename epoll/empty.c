@@ -37,7 +37,7 @@ void usage(FILE *pout)
 "\t-n\tWait for checkpoint at NUM.\n"
 "\n"
 "You may only specify one LABEL or NUM and you may not specify both.\n"
-"Label numbers are integers in the range 0-%ld\n"
+"Label numbers are integers in the range 0-%d\n"
 "Valid label numbers and their corresponding LABELs are:\n", num_labels - 1);
 	print_labels(pout);
 }
@@ -56,8 +56,8 @@ char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
-	ckpt_label = last_label;
-	ckpt_op_num = num_labels;
+	ckpt_op_num = num_labels - 1;
+	ckpt_label = labels[ckpt_op_num];
 	while (1) {
 		int c;
 		c = getopt_long(argc, argv, "f:LNhl:n:", long_options, NULL);
@@ -73,7 +73,7 @@ void parse_args(int argc, char **argv)
 				exit(EXIT_SUCCESS);
 				break;
 			case 'N':
-				printf("%ld\n", num_labels - 1);
+				printf("%d\n", num_labels - 1);
 				exit(EXIT_SUCCESS);
 				break;
 			case 'h':
@@ -87,7 +87,7 @@ void parse_args(int argc, char **argv)
 				if ((sscanf(optarg, "%d", &ckpt_op_num) < 1) ||
 				    (ckpt_op_num < 0) ||
 				    (ckpt_op_num >= num_labels)) {
-					fprintf(stderr, "Option -n requires an argument in the range 0-%ld. Got %d\n", num_labels - 1, ckpt_op_num);
+					fprintf(stderr, "Option -n requires an argument in the range 0-%d. Got %d\n", num_labels - 1, ckpt_op_num);
 					usage(stderr);
 					exit(EXIT_FAILURE);
 				}
@@ -97,13 +97,6 @@ void parse_args(int argc, char **argv)
 		}
 	}
 }
-
-/*
- * A LABEL is a point in the program we can goto where it's interesting to
- * checkpoint. These enable us to have a set of labels that can be specified
- * on the commandline.
- */
-const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
 
 int main (int argc, char **argv)
 {
@@ -151,5 +144,3 @@ out:
 	fclose(logfp);
 	exit(EXIT_SUCCESS);
 }
-
-const char __attribute__((__section__(".LABELs"))) *last_label  = "<end>";

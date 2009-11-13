@@ -63,8 +63,8 @@ char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
-	ckpt_label = last_label;
-	ckpt_op_num = num_labels;
+	ckpt_op_num = num_labels - 1;
+	ckpt_label = labels[ckpt_op_num];
 	while (1) {
 		int c;
 		c = getopt_long(argc, argv, "f:LNhl:n:", long_options, NULL);
@@ -104,12 +104,6 @@ void parse_args(int argc, char **argv)
 	}
 }
 
-/*
- * A LABEL is a point in the program we can goto where it's interesting to
- * checkpoint. These enable us to have a set of labels that can be specified
- * on the commandline.
- */
-const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
 int main(int argc, char **argv)
 {
 	struct epoll_event ev[2] = {
@@ -229,7 +223,7 @@ out:
 	}
 	if (op_num != INT_MAX) {
 		log("FAIL", "error at label %s (op num: %d)\n",
-			  labels(op_num), op_num);
+			  labels[op_num], op_num);
 	}
 	close(tube[0]);
 	close(tube[1]);
@@ -237,5 +231,3 @@ out:
 	fclose(logfp);
 	exit(ec);
 }
-
-const char __attribute__((__section__(".LABELs"))) *last_label  = "<end>";

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <limits.h>
 #include <getopt.h>
+#include <dirent.h> /* scandir() */
 
 /* open() */
 #include <sys/types.h>
@@ -50,6 +51,7 @@ void usage(FILE *pout)
 "\t-l\tWait for checkpoint at LABEL.\n"
 "\t-N\tPrint the maximum label number and exit.\n"
 "\t-n\tWait for checkpoint at NUM.\n"
+"\t-s\tNUM socket pairs to create. [Default: up to half of ulimit -n]\n"
 "\n"
 "You may only specify one LABEL or NUM and you may not specify both.\n"
 "Label numbers are integers in the range 0-%d\n"
@@ -68,11 +70,13 @@ const struct option long_options[] = {
 	{0, 0, 0, 0},
 };
 
-int num_sk = 1000;
+int num_sk = 400;
 
 void set_default_num_sk(void)
 {
 	struct rlimit lim;
+	int num_fds_open = 0;
+	struct dirent **dents;
 
 	/*
 	 * Get num_sk from hard rlimit. The goal of this default is to open
@@ -80,7 +84,17 @@ void set_default_num_sk(void)
 	 * checkpointed epoll items at one time.
 	 */
 	getrlimit(RLIMIT_NOFILE, &lim);
-	num_sk = lim.rlim_cur & ~1; /* round down to nearest multiple of 2 */
+	num_sk = lim.rlim_cur/2;
+
+	num_fds_open = scandir("/proc/self/fd", &dents, 0, alphasort);
+	if (num_fds_open < 0)
+		perror("scandir");
+	else {
+		free(dents);
+		num_fds_open -= 2;
+		num_sk -= (num_fds_open + 1)/2;
+	}
+	num_sk &= ~1; /* round down to nearest multiple of 2 */
 
 	/*
 	 * Of course if we're running as root then we may have an
@@ -90,12 +104,13 @@ void set_default_num_sk(void)
 	if (num_sk > 1000000)
 		num_sk = 1000000;
 }
+
 char *freezer = "1";
 
 void parse_args(int argc, char **argv)
 {
-	ckpt_label = last_label;
-	ckpt_op_num = num_labels;
+	ckpt_op_num = num_labels - 1;
+	ckpt_label = labels[ckpt_op_num];
 
 	set_default_num_sk();
 
@@ -157,7 +172,6 @@ void parse_args(int argc, char **argv)
 	}
 }
 
-const char __attribute__((__section__(".LABELs"))) *first_label = "<start>";
 int main(int argc, char **argv)
 {
 	char rbuf[128];
@@ -166,7 +180,7 @@ int main(int argc, char **argv)
 	int op_num = 0;
 	int efd;
 	int ec = EXIT_FAILURE;
-	int ret;
+	int ret = 0;
 	int i;
 
 	parse_args(argc, argv);
@@ -209,6 +223,10 @@ label(create,
 label(open, ret, ret + 0);
 	for (i = 0; i < num_sk; i+=2) {
 		ret = socketpair(AF_UNIX, SOCK_SEQPACKET, 0, &sk[i]);
+		if (ret) {
+			log_error("socketpair");
+			goto out;
+		}
 		evs[i].data.fd = sk[i];
 		evs[i].events = EPOLLOUT;
 		evs[i + 1].data.fd = sk[i + 1];
@@ -295,11 +313,11 @@ out:
 	}
 	if (op_num != INT_MAX) {
 		log("FAIL", "error at label %s (op num: %d)\n",
-			  labels(op_num), op_num);
+			  labels[op_num], op_num);
 	}
 	if (sk) {
 		for (i = 0; i < num_sk; i++) {
-			if (sk[i] >= 0) {
+			if (sk[i] > 0) {
 				close(sk[i]);
 				sk[i] = -1;
 			}
@@ -312,5 +330,3 @@ out:
 	fclose(logfp);
 	exit(ec);
 }
-
-const char __attribute__((__section__(".LABELs"))) *last_label  = "<end>";
