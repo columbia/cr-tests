@@ -71,12 +71,16 @@
 /* parisc unsupported. */
 #if __powerpc__
 
+#ifndef __NR_eclone
+#define __NR_eclone 323
+#endif
+
 #ifndef __NR_checkpoint
-#define __NR_checkpoint 323
+#define __NR_checkpoint 324
 #endif
 
 #ifndef __NR_restart
-#define __NR_restart 324
+#define __NR_restart 325
 #endif
 
 #elif __s390x__
