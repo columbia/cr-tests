@@ -2,6 +2,20 @@
 # Copyright 2009 IBM Corp.
 # Author: Serge Hallyn
 
+declare -i total=0
+declare -i passed=0
+
+# $1 = status
+update_totals() {
+    local status=$1
+    total+=1
+    if [ $status -eq 0 ] ; then
+	passed+=1
+    else
+	echo FAIL
+    fi
+}
+
 which checkpoint > /dev/null 2>&1
 if [ $? -ne 0 ]; then
 	echo Please place ckpt from user-cr in your PATH
@@ -32,82 +46,56 @@ fi
 echo Running simple checkpoint/restart test
 pushd simple
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 1
-fi
+update_totals $?
 popd
 
 echo Running counterloop tests
 pushd counterloop
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 2
-fi
+update_totals $?
 popd
 
 echo Running fileio test
 pushd fileio
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 3
-fi
+update_totals $?
 popd
 
 echo Running futex tests
 pushd futex
 bash run.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 8
-fi
+update_totals $?
 popd
 
 echo Running restart block test
 pushd sleep
 bash runtest.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 6
-fi
+update_totals $?
 popd
 
 echo Running process-tree tests
 pushd process-tree
 sh runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 7
-fi
+update_totals $?
 popd
 
 echo Running bash test
 pushd bashckpt
 bash bash-cr.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 5
-fi
+update_totals $?
 popd
 
 echo Running ipc tests
 pushd ipc
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 6
-fi
+update_totals $?
 popd
 
 echo Running userid/namespace test
 pushd userns
 bash runtests.sh
-if [ $? -ne 0 ]; then
-	echo FAIL
-	exit 4
-fi
+update_totals $?
 popd
 
+echo $passed out of $total test groups passed.
 exit 0
