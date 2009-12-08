@@ -40,7 +40,7 @@ checkpoint()
 	ret=$?
 	if [ $ret -ne 0 ]; then
 		$ECHO "***** FAIL: Checkpoint of $pid failed"
-		ps aux |grep $TEST_CMD >> $SCRIPT_LOG
+		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 		exit 1;
 	fi
 }
@@ -73,7 +73,7 @@ function create_container()
 	pid=`cat $TEST_PID_FILE`;
 	if [  "x$pid" == "x" ]; then
 		$ECHO "***** FAIL: Invalid container-init pid $pid"
-		ps aux |grep $TEST_CMD >> $SCRIPT_LOG
+		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 		exit 1
 	fi
 	$ECHO "Created container with pid $pid" >> $SCRIPT_LOG
@@ -93,7 +93,7 @@ function restart_container
 
 	if [ $ret -ne 0 ]; then
 		$ECHO "***** FAIL: Restart of $pid failed"
-		ps aux |grep $TEST_CMD >> $SCRIPT_LOG
+		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 		exit 1;
 	fi
 }
@@ -160,7 +160,7 @@ while [ $cnt -lt 15 ]; do
 	$ECHO "\t- Done creating container, cinit-pid $pid"
 
 	wait_for_checkpoint_ready
-	ps aux |grep $TEST_CMD >> $SCRIPT_LOG
+	ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 
 	# override default freezerdir
 	if [ -d $freezerdir ]; then
@@ -169,7 +169,7 @@ while [ $cnt -lt 15 ]; do
 	freezerdir=$freezermountpoint/$pid
 	freeze_pid $pid
 
-	num_pids1=`ps aux |grep $TEST_CMD | wc -l`
+	num_pids1=`ps -efL |grep $TEST_CMD | wc -l`
 
 	create_fs_snapshot
 
@@ -189,8 +189,8 @@ while [ $cnt -lt 15 ]; do
 
 	sleep 3;
 
-	num_pids2=`ps aux |grep $TEST_CMD | wc -l`
-	ps aux |grep $TEST_CMD >> $SCRIPT_LOG
+	num_pids2=`ps -efL |grep $TEST_CMD | wc -l`
+	ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 	$ECHO "\t- num_pids1 $num_pids1, num_pids2 $num_pids2";
 
 	# ns_exec pid is parent-pid of restarted-container-init
