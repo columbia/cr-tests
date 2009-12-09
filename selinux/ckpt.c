@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	fprintf(file, "hello, world!\n");
 	fflush(file);
 
-	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, CHECKPOINT_SUBTREE);
+	ret = syscall(__NR_checkpoint, pid, STDOUT_FILENO, CHECKPOINT_SUBTREE, -1);
 	if (ret < 0) {
 		perror("checkpoint");
 		exit(2);
