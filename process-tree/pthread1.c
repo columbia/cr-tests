@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libcrtest.h>
+#include <pthread.h>
 
 int num_threads = 5;
 FILE *logfp;
@@ -17,16 +18,60 @@ static void usage(char *argv[])
 	do_exit(1);
 }
 
+struct test_arg {
+	pthread_mutex_t *mutex;
+	pthread_cond_t  *cond;
+};
+
 void *
 do_work(void *arg)
 {
-#if 0
-	fprintf(logfp, "Thread %lu sleeping...\n", pthread_self());
+	int rc;
+	struct test_arg *targ = (struct test_arg *)arg;
+
+	fprintf(logfp, "Thread %lu: waiting...\n", pthread_self());
 	fflush(logfp);
-#endif
+
+	rc = pthread_cond_wait(targ->cond, targ->mutex);
+	if (rc < 0) {
+		perror("pthread_cond_wait()");
+		exit(1);
+	}
+	pthread_mutex_unlock(targ->mutex);
+
+	fprintf(logfp, "Thread %lu: wokeup...\n", pthread_self());
+	rc = pthread_cond_signal(targ->cond);
+	if (rc < 0)
+		fprintf(logfp, "do_work(): pthread_cond_signal() failed %s\n",
+					strerror(errno));
+
+	fprintf(logfp, "Thread %lu: exiting...\n", pthread_self());
+	fflush(logfp);
+}
+
+void *
+do_work_coord(void *arg)
+{
+	int rc;
+	struct test_arg *targ = (struct test_arg *)arg;
+
 	while(!test_done())
 		sleep(1);
+
+	fprintf(logfp, "Thread %lu: test-done\n", pthread_self());
+
+	rc = pthread_cond_signal(targ->cond);
+	if (rc < 0)
+		fprintf(logfp, "do_work_coord(): pthread_cond_signal() error "
+				"%s\n", strerror(errno));
+
+	fprintf(logfp, "Thread %lu: exiting...\n", pthread_self());
+	fflush(logfp);
 }
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t  cond = PTHREAD_COND_INITIALIZER;
+struct test_arg targ;
 
 pthread_t *create_threads(int n)
 {
@@ -35,6 +80,9 @@ pthread_t *create_threads(int n)
 	pthread_t *tid_list;
 	pthread_t tid;
 
+	targ.mutex = &mutex;
+	targ.cond = &cond;
+
 	tid_list = (pthread_t *)malloc(n * sizeof(pthread_t));
 	if (!tid_list) {
 		fprintf(logfp, "malloc(%d) failed, error %s\n",
@@ -42,8 +90,16 @@ pthread_t *create_threads(int n)
 		do_exit(1);
 	}
 
-	for (i = 0; i < n; i++) {
-		rc = pthread_create(&tid, NULL, do_work, NULL);
+	rc = pthread_create(&tid, NULL, do_work_coord, &targ);
+	if (rc < 0) {
+		fprintf(logfp, "pthread_create() of coord failed, rc %d "
+				"error %s\n", rc, strerror(errno));
+		do_exit(1);
+	}
+	tid_list[0] = tid;
+
+	for (i = 1; i < n; i++) {
+		rc = pthread_create(&tid, NULL, do_work, &targ);
 		if (rc < 0) {
 			fprintf(logfp, "pthread_create() failed, i %d, rc %d "
 					"error %s\n", i, rc, strerror(errno));
