@@ -15,7 +15,7 @@ FILE *logfp;
 
 int num_threads = 8;
 void **exp_addrs;
-int  *exp_sizes;
+size_t  *exp_sizes;
 int *tstatus;
 
 static void usage(char *argv[])
@@ -62,7 +62,7 @@ pthread_attr_t *get_thread_attr(int tnum)
 	return attr;
 }
 
-int get_stack_info(pthread_t tid, void **addrp, int *sizep)
+int get_stack_info(pthread_t tid, void **addrp, size_t *sizep)
 {
 	int rc;
 	pthread_attr_t attr;
@@ -86,12 +86,12 @@ int get_stack_info(pthread_t tid, void **addrp, int *sizep)
 
 void *do_work(void *arg)
 {
-	int tnum = (int)arg;
+	long tnum = (long)arg;
 	int rc;
 	void *act_addr;
-	int act_size;
+	size_t act_size;
 
-	fprintf(logfp, "%d: Thread %lu: waiting for checkpoint\n", tnum,
+	fprintf(logfp, "%ld: Thread %lu: waiting for checkpoint\n", tnum,
 			pthread_self());
 	fflush(logfp);
 
@@ -120,7 +120,7 @@ void *do_work(void *arg)
 
 pthread_t *create_threads(int n)
 {
-	int i;
+	long i;
 	int rc;
 	pthread_t *tid_list;
 	pthread_t tid;
@@ -128,7 +128,7 @@ pthread_t *create_threads(int n)
 
 	tid_list = (pthread_t *)malloc(n * sizeof(pthread_t));
 	exp_addrs = malloc(sizeof(void *) * n);
-	exp_sizes = malloc(sizeof(int) * n);
+	exp_sizes = malloc(sizeof(size_t) * n);
 	tstatus = malloc(sizeof(int) * n);
 
 	if (!tid_list || !exp_addrs || !exp_sizes || !tstatus) {
