@@ -13,3 +13,4 @@ clean:
 	for s in $(SUBDIRS) ; do \
 		$(MAKE) -C $$s $@ ; \
 	done
+	rm -rf bashckpt/cr_bash*
