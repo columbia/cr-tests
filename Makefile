@@ -1,5 +1,5 @@
 SUBDIRS = libcrtest counterloop fileio simple userns ipc sleep \
-	  process-tree futex epoll
+	  process-tree futex epoll taskfs
 
 targets = ns_exec mysu
 
