@@ -97,5 +97,11 @@ bash runtests.sh
 update_totals $?
 popd
 
+echo Running cwd/chroot tests
+pushd taskfs
+bash runtest.sh
+update_totals $?
+popd
+
 echo $passed out of $total test groups passed.
 exit 0
