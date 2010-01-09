@@ -2,8 +2,7 @@
 
 source ../common.sh
 
-#dir=`mktemp -p . -d -t cr_pthread2_XXXXXXX` || (echo "mktemp failed"; exit 1)
-dir=cr_pthread2
+dir=`mktemp -p . -d -t cr_pthread2_XXXXXXX` || (echo "mktemp failed"; exit 1)
 mkdir $dir
 echo "Using output dir $dir"
 cd $dir
@@ -17,7 +16,7 @@ RESTART=`which restart`
 ECHO="/bin/echo -e"
 
 TEST_CMD="../pthread2"
-TEST_ARGS="-n 128"			# -n: number of threads
+TEST_ARGS="-n 4"			# -n: number of threads
 SCRIPT_LOG="log-run-pthread2"
 TEST_PID_FILE="pid.pthread2";
 
