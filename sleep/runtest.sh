@@ -26,10 +26,10 @@ fi
 
 # sleeptest sleeps twice for 3 secs each
 # we wasted 1+ second before frezing and checkpoint it,
-# then another 0.3 after restart
-# 3 seconds definately should bring us into the second
-# 3-second sleep
-sleep 1
+# then another 1 after restart - but if restart was slow
+# that could give us <1sec.  So sleep 2 more secs to make
+# sure we're into the second 3-second sleep
+sleep 2
 
 pidof sleeptest
 if [ $? -ne 0 ]; then
