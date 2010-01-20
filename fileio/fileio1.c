@@ -273,7 +273,10 @@ int main(int argc, char *argv[])
 	 * Cannot checkpoint process with open device files yet;
 	 */
 	printf("Closing stdio fds and writing messages to %s\n", log_fnam);
-	for (i=0; i<100; i++) close(i);
+	for (i=0; i<100; i++)  {
+		if (i != fileno(logfp))
+			close(i);
+	}
 
 	/*
 	 * Announce that we are now prepared for a checkpoint 
