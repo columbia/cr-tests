@@ -9,3 +9,8 @@ echo
 echo "****** $0: Running test: filelock1"
 echo
 ./run-fcntltests.sh filelock1
+
+echo
+echo "****** $0: Running test: filelease1"
+echo
+./run-fcntltests.sh filelease1
