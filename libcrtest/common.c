@@ -58,7 +58,7 @@ void set_checkpoint_ready()
 	close(fd);
 }
 
-static void print_exit_status(int pid, int status)
+void print_exit_status(int pid, int status)
 {
 	fprintf(logfp, "Pid %d unexpected exit - ", pid);
 	if (WIFEXITED(status)) {

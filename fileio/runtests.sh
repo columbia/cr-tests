@@ -14,3 +14,8 @@ echo
 echo "****** $0: Running test: filelease1"
 echo
 ./run-fcntltests.sh filelease1
+
+echo
+echo "****** $0: Running test: fsetown1"
+echo
+./run-fcntltests.sh fsetown1
