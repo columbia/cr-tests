@@ -4,21 +4,25 @@
 
 source ../common.sh
 
-dir=`mktemp -p . -d -t cr_fileio_XXXXXXX` || (echo "mktemp failed"; exit 1)
+# test_case could be a command-line-arg, but since only one test
+# uses this for now, hard code.
+test_case="fileio1"
+
+dir=`mktemp -p . -d -t cr_${test_case}_XXXXXXX` || (echo "mktemp failed"; exit 1)
 echo "Using output dir $dir"
 
 SLOW_DOWN="$dir/slow-down-fileio"
-CKPT_FILE="$dir/ckpt-fileio1";
+CKPT_FILE="$dir/checkpoint-${test_case}"
 CKPT_READY="$dir/checkpoint.ready"
 COPY_DONE="$dir/copy.done"
 SRC_FILE="$dir/input-data.1";
 DEST_FILE="$dir/output-data.1";
 DEST_FILE_SNAP="$dir/output-data.1.snap";
-TEST_LOG="$dir/log.fileio1"
-TEST_LOG_SNAP="$dir/log.fileio1.snap"
+TEST_LOG="$dir/log.${test_case}"
+TEST_LOG_SNAP="$dir/log.${test_case}.snap"
 
 LOG_FILE="$dir/f1-loop.log"
-TEST_CMD="./fileio1"
+TEST_CMD="./$test_case"
 NS_EXEC="../ns_exec"
 
 # Make sure no stray TEST_CMD from another run is still going
