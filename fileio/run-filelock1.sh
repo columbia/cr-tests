@@ -45,11 +45,25 @@ checkpoint()
 	fi
 }
 
+function check_for_failure()
+{
+	grep --binary-files=text FAIL $PWD/$TEST_LOG > /dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		$ECHO "\t***** Application FAILED after restart" >> $SCRIPT_LOG
+		$ECHO "\t***** See $TEST_LOG for details" >> $SCRIPT_LOG
+
+		$ECHO "\t***** Application FAILED after restart"
+		$ECHO "\tSee $PWD/$TEST_LOG for details"
+		exit 1;
+	fi
+}
+
 function wait_for_checkpoint_ready()
 {
 	# Wait for test to finish setup
 	while [ ! -f $CHECKPOINT_READY ]; do
 		$ECHO "\t- Waiting for $CHECKPOINT_READY"
+		check_for_failure;
 		sleep 1;
 	done;
 }
@@ -202,15 +216,7 @@ while [ $cnt -lt 20 ]; do
 	wait $nspid;
 	ret=$?
 
-	grep --binary-files=text FAIL $PWD/$TEST_LOG > /dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		$ECHO "\t***** Application FAILED after restart" >> $SCRIPT_LOG
-		$ECHO "\t***** See $TEST_LOG for details" >> $SCRIPT_LOG
-
-		$ECHO "\t***** Application FAILED after restart"
-		$ECHO "\tSee $PWD/$TEST_LOG for details"
-		exit 1;
-	fi
+	check_for_failure;
 
 	$ECHO "\t- Container exited, status $ret"
 

@@ -9,4 +9,4 @@ all: $(LIBCRTEST) $(targets)
 
 clean:
 	rm -f $(targets)
-	rm -rf cr_fileio*
+	rm -rf cr_fileio* cr_filelock1*
