@@ -8,4 +8,4 @@ echo
 echo
 echo "****** $0: Running test: filelock1"
 echo
-./run-filelock1.sh
+./run-fcntltests.sh filelock1
