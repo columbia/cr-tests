@@ -9,6 +9,10 @@
 
 int num_threads = 5;
 FILE *logfp;
+/*
+ * Use LOG_PREFIX with thread index as suffix, if each thread needs a
+ * separate log file. For now, we use a single log
+ */
 #define LOG_PREFIX		"logs.d/pthread1"
 
 static void usage(char *argv[])
@@ -137,7 +141,6 @@ main(int argc, char *argv[])
 	pthread_t *tid_list;
 	char log_file[256];
 
-	for (i=0; i<100; i++) close(i);
 	sprintf(log_file, "%s.log", LOG_PREFIX);
 
 	logfp = fopen(log_file, "w");
@@ -146,6 +149,13 @@ main(int argc, char *argv[])
 					strerror(errno));
 		fflush(stderr);
 		do_exit(1);
+	}
+
+	fprintf(stderr, "Redirecting output to logfile %s\n", log_file);
+
+	for (i=0; i<100; i++) {
+		if (i != fileno(logfp))
+			close(i);
 	}
 
 	if (test_done()) {
