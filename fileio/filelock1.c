@@ -9,8 +9,6 @@
 #define TEST_FILE	"data.d/data.filelock1"
 #define LOG_FILE	"logs.d/log.filelock1"
 
-typedef unsigned long long u64;
-
 extern FILE *logfp;
 int test_fd;
 int event_fd1;
@@ -30,57 +28,6 @@ int event_fd2;
  * 	locks it had at the time of checkpoint and that it cannot grab a lock
  * 	held by the other process.
  */
-
-setup_notification()
-{
-	int efd;
-
-	efd = eventfd(0, 0);
-	if (efd < 0) {
-		fprintf(logfp, "ERROR: eventfd(): %s\n", strerror(errno));
-		do_exit(1);
-	}
-	return efd;
-}
-
-wait_for_events(int efd, u64 total)
-{
-	int n;
-	u64 events;
-	u64 count = (u64)0;
-
-	do {
-		fprintf(logfp, "%d: wait_for_events: fd %d, reading for %llu\n",
-				getpid(), efd, total);
-		fflush(logfp);
-
-		n = read(efd, &events, sizeof(events));
-		if (n != sizeof(events)) {
-			fprintf(logfp, "ERROR: read(event_fd) %s\n",
-						strerror(errno));
-			do_exit(1);
-		}
-		fprintf(logfp, "%d: wait_for_events: fd %d read %llu\n",
-				getpid(), efd, events);
-
-		count += events;
-	} while (count < total);
-}
-
-notify_one_event(int efd)
-{
-	int n;
-	u64 event = (u64)1;
-
-	fprintf(logfp, "%d: Notifying one event on fd %d\n", getpid(), efd);
-	fflush(logfp);
-
-	n = write(efd, &event, sizeof(event));
-	if (n != sizeof(event)) {
-		fprintf(logfp, "ERROR: write(event_fd) %s\n", strerror(errno));
-		do_exit(1);
-	}
-}
 
 struct test_arg {
 	int child_idx;

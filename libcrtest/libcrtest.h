@@ -12,6 +12,10 @@ struct record {
 	char data[256];
 };
 
+#ifdef __i386__
+typedef unsigned long long u64;
+#endif
+
 extern void do_exit(int status);
 extern int test_done(void);
 extern int test_checkpoint_done();
@@ -23,4 +27,7 @@ extern char *freezer_mountpoint(void);
 /* right now, subsys must always be "freezer" */
 extern int move_to_cgroup(char *subsys, char *grp, int pid);
 
+extern void notify_one_event(int efd);
+extern void wait_for_events(int efd, u64 total);
+extern int setup_notification();
 #endif /* LIBCRTEST_H */
