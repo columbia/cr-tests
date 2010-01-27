@@ -2,12 +2,13 @@
 
 source ../common.sh
 
-if [ $# -ne 1 ]; then
+if [ $# -lt 1 ]; then
 	echo "Usage: $0 <test-case>";
 	exit 1;
 fi
 
 test_case=$1;
+shift
 
 if [ ! -x $test_case ]; then
 	echo "$0: Test case \'$test_case\' does not exist / not executable ?"
@@ -25,7 +26,7 @@ RESTART=`which restart`
 ECHO="/bin/echo -e"
 
 TEST_CMD="../$test_case"
-TEST_ARGS=""
+TEST_ARGS=$*
 TEST_LOG="logs.d/log.${test_case}"
 SCRIPT_LOG="logs.d/log.run-${test_case}"
 TEST_PID_FILE="pid.${test_case}";

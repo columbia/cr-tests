@@ -4,6 +4,7 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include "libcrtest.h"
 
 #define TEST_FILE	"data.d/data.filelock1"
@@ -13,6 +14,7 @@ extern FILE *logfp;
 int test_fd;
 int event_fd1;
 int event_fd2;
+int mandatory_locks = 1;
 
 /*
  * Description:
@@ -60,6 +62,9 @@ void set_lock(int fd, struct test_arg *tlock)
 		fprintf(logfp, "%d: set_lock(): ERROR [%d, %llu, %llu]: %s\n",
 				getpid(), tlock->type, (u64)tlock->start,
 				(u64)tlock->len, strerror(errno));
+		if (mandatory_locks)
+			fprintf(logfp, "\n\t***** Is the FS mounted with "
+					"'-o mand' option ?\n\n");
 		fflush(logfp);
 		kill(getppid(), SIGUSR1);
 		do_exit(1);
@@ -108,6 +113,9 @@ void test_lock(int fd, int locked_by_me, struct test_arg *tlock)
 	} else if (rc < 0) {
 		fprintf(logfp, "ERROR: fcntl(F_SETLK): %s, error %s\n",
 				lock_info, strerror(errno));
+		if (mandatory_locks)
+			fprintf(logfp, "\n\t***** Is the FS mounted with "
+					"'-o mand' option ?\n\n");
 		goto error;
 	}
 
@@ -215,8 +223,12 @@ int do_child1(int idx)
 void setup_test_file()
 {
 	char buf[256];
+	int mode;
+	int rc;
 
-	test_fd = open(TEST_FILE, O_RDWR|O_CREAT|O_TRUNC, 0666);
+	mode = S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH; /* 0666 */
+
+	test_fd = open(TEST_FILE, O_RDWR|O_CREAT|O_TRUNC, mode);
 	if (test_fd < 0) {
 		fprintf(logfp, "ERROR: open(%s): %s\n", TEST_FILE,
 				strerror(errno));
@@ -225,6 +237,23 @@ void setup_test_file()
 
 	memset(buf, 0, sizeof(buf));
 	write(test_fd, buf, sizeof(buf));
+
+	if (!mandatory_locks)
+		return;
+
+	/* Enable mandatory file locks (setgid, clear group execute) */
+	mode |= S_ISGID;
+	mode &= ~S_IXGRP;
+
+	rc = fchmod(test_fd, mode);
+	if (rc < 0) {
+		fprintf(logfp, "ERROR: fchmod(%s): rc %d, error %s\n",
+				TEST_FILE, rc, strerror(errno));
+		fprintf(logfp, "Maybe '-o mand' mount option is not set ?\n");
+		do_exit(1);
+	}
+	fprintf(logfp, "Mandatory locking set on %s, mode 0%o\n", TEST_FILE,
+			mode);
 }
 
 int pid1, pid2;
@@ -238,29 +267,49 @@ void child_handler(int sig)
 
 	if (sig == SIGCHLD)
 		do_wait(1);
+
 	fprintf(logfp, "%d: Test case FAILED\n", getpid());
 	fflush(logfp);
 	/*
 	 * Kill (remaining) children and exit.
 	 */
-	kill(pid1, SIGKILL);
-	kill(pid2, SIGKILL);
+	if (pid1)
+		kill(pid1, SIGKILL);
+	if (pid2)
+		kill(pid2, SIGKILL);
 
 	do_exit(-1);
 }
 
+usage(char *argv[])
+{
+	fprintf(logfp, "Usage: %s [-m]\n", argv[0]);
+	fprintf(logfp, "\tTest POSIX (advisory) file locks (without -m)\n");
+	fprintf(logfp, "\t-m: Test mandatory file locks\n");
+	fprintf(logfp, "Test FAILED\n");
+	do_exit(1);
+}
+
 main(int argc, char *argv[])
 {
-	int i, status, rc;
-
-	if (test_done()) {
-		printf("Remove %s before running test\n", TEST_DONE);
-		do_exit(1);
-	}
+	int i, c, status, rc;
 
 	logfp = fopen(LOG_FILE, "w");
 	if (!logfp) {
 		perror("open() logfile");
+		do_exit(1);
+	}
+
+	mandatory_locks = 0;
+	while((c = getopt(argc, argv, "m")) != EOF) {
+		switch (c) {
+			case 'm': mandatory_locks = 1; break;
+			default: usage(argv);
+		}
+	}
+
+	if (test_done()) {
+		printf("Remove %s before running test\n", TEST_DONE);
 		do_exit(1);
 	}
 
