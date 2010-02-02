@@ -5,6 +5,7 @@
 #include <string.h>
 #include <malloc.h>
 #include "libcrtest.h"
+#include <sys/eventfd.h>
 
 FILE *logfp;
 
