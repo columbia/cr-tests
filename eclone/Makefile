@@ -10,7 +10,7 @@ LDFLAGS =
 
 LIB_ECLONE = $(USER_CR_DIR)/libeclone.a
 
-PROGS = eclone-1 eclone-2 eclone-3
+PROGS = eclone-1 eclone-2 eclone-3 eclone-4
 
 all: $(PROGS)
 
