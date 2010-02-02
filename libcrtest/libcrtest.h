@@ -12,9 +12,8 @@ struct record {
 	char data[256];
 };
 
-#ifdef __i386__
-typedef unsigned long long u64;
-#endif
+#include <stdint.h>
+typedef uint64_t u64;
 
 extern void do_exit(int status);
 extern int test_done(void);
