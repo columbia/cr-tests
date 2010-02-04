@@ -57,9 +57,9 @@ static void do_work(char *id_str)
 	do_exit(0);
 }
 
-static do_child(int depth, char *id_str);
+static void do_child(int depth, char *id_str);
 
-create_children(int depth, char *parent_id)
+void create_children(int depth, char *parent_id)
 {
 	int i;
 	int i_len = 16;		// bytes needed to represent 'i' as string
@@ -88,7 +88,7 @@ create_children(int depth, char *parent_id)
 	}
 }
 
-do_child(int depth, char *id_str)
+void do_child(int depth, char *id_str)
 {
 	int i;
 	FILE *cfp;
@@ -141,11 +141,10 @@ static void usage(char *argv[])
 	do_exit(1);
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int i;
-	int status;
 	char *id_str = "0";
 	char log_file[256];
 
@@ -187,4 +186,6 @@ main(int argc, char *argv[])
 	set_checkpoint_ready();
 
 	do_wait(num_children);
+
+	return 0;
 }
