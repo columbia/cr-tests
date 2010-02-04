@@ -51,6 +51,8 @@ do_work(void *arg)
 
 	fprintf(logfp, "Thread %lu: exiting...\n", pthread_self());
 	fflush(logfp);
+
+	return NULL;
 }
 
 void *
@@ -71,6 +73,8 @@ do_work_coord(void *arg)
 
 	fprintf(logfp, "Thread %lu: exiting...\n", pthread_self());
 	fflush(logfp);
+
+	return NULL;
 }
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -133,11 +137,10 @@ void wait_for_threads(pthread_t *tid_list, int n)
 }
 
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int i;
-	int status;
 	pthread_t *tid_list;
 	char log_file[256];
 
@@ -181,4 +184,6 @@ main(int argc, char *argv[])
 	set_checkpoint_ready();
 
 	wait_for_threads(tid_list, num_threads);
+
+	return 0;
 }
