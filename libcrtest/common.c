@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <wait.h>
 #include <errno.h>
@@ -6,6 +7,8 @@
 #include <malloc.h>
 #include "libcrtest.h"
 #include <sys/eventfd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 FILE *logfp;
 
@@ -18,7 +21,7 @@ void do_exit(int status)
 	_Exit(status);
 }
 
-int test_done()
+int test_done(void)
 {
 	int rc;
 
@@ -30,9 +33,12 @@ int test_done()
 
 	fprintf(logfp, "access(%s) failed, %s\n", TEST_DONE, strerror(errno));
 	do_exit(1);
+
+	/* not reached */
+	return 0;
 }
 
-int test_checkpoint_done()
+int test_checkpoint_done(void)
 {
 	int rc;
 
@@ -44,13 +50,16 @@ int test_checkpoint_done()
 
 	fprintf(logfp, "access(%s) failed, %s\n", CKPT_DONE, strerror(errno));
 	do_exit(1);
+
+	/* not reached */
+	return 0;
 }
 
 void set_checkpoint_ready()
 {
 	int fd;
 
-	fd = creat(CKPT_READY, 0666, 0);
+	fd = creat(CKPT_READY, 0666);
 	if (fd < 0) {
 		fprintf(logfp, "creat(%s) failed, %s\n", CKPT_READY,
 				strerror(errno));
@@ -161,7 +170,6 @@ static int data_compare(FILE *srcfp, FILE *destfp)
 
 void copy_data(char *srcfile, char *destfile)
 {
-	int fd;
 	int rc;
 	int num;
 	struct record rec;
