@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <libgen.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -45,12 +46,14 @@ static void usage(const char *name)
 	exit(1);
 }
 
+#if 0
 static void print_my_info(const char *procname, char *ttyname)
 {
 	printf("procname %s, ttyname %s, pid %d, ppid %d, pgid %d, sid %d\n",
 			procname, ttyname, getpid(), getppid(), getpgid(0),
 			getsid(0));
 }
+#endif
 
 static int string_to_ul(const char *str, unsigned long int *res)
 {
@@ -187,8 +190,6 @@ int check_newcgrp(void)
 int do_child(void *vargv)
 {
 	char **argv = (char **)vargv;
-	int ret, newgroup = 0;
-	char buf[20];
 
 	if (check_newcgrp())
 		return 1;
@@ -201,7 +202,6 @@ int do_child(void *vargv)
 void write_pid(char *pid_file, int pid)
 {
 	FILE *fp;
-	char buf[16];
 
 	if (!pid_file)
 		return;
