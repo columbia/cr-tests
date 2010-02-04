@@ -327,4 +327,7 @@ int main(int argc, char *argv[])
 		do_exit(1);
 	}
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
