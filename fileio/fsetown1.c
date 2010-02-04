@@ -24,9 +24,6 @@ int got_sigio;
  */
 void iohandler(int sig)
 {
-	int rc;
-	char buf[16];
-
 	fprintf(logfp, "%d: Got signal %d\n", getpid(), sig);
 	fflush(logfp);
 	got_sigio = 1;
@@ -123,7 +120,7 @@ void test_owner(int fd, int exp_owner)
 	return;
 }
 
-int do_child()
+void do_child()
 {
 	int rc;
 	char buf[16];
@@ -191,9 +188,9 @@ void usr1_handler(int sig)
 	wait_for_child();
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	int i, status, rc;
+	int i, rc;
 	int pid;
 
 	if (test_done()) {
@@ -232,8 +229,8 @@ main(int argc, char *argv[])
 		do_child(i);
 
 	if (pid < 0) {
-		fprintf(logfp, "%d: fork() failed, rc %d, error %s\n", getpid(),
-				rc, strerror(errno));
+		fprintf(logfp, "%d: fork() failed, error %s\n", getpid(),
+				strerror(errno));
 		do_exit(1);
 	}
 
@@ -265,4 +262,7 @@ main(int argc, char *argv[])
 
 	fflush(logfp);
 	wait_for_child();
+
+	/* not reached, wait_for_child exits. */
+	return 0;
 }
