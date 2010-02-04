@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <wait.h>
@@ -46,12 +47,12 @@ pthread_attr_t *alloc_thread_attr()
 }
 
 #ifndef debug
-dump_attr(char *msg, pthread_attr_t *attr)
+void dump_attr(char *msg, pthread_attr_t *attr)
 {
 }
 #endif
 
-get_affinity(int tnum, pthread_attr_t *attr, cpu_set_t *cpu_set)
+void get_affinity(int tnum, pthread_attr_t *attr, cpu_set_t *cpu_set)
 {
 	int rc;
 
@@ -66,7 +67,7 @@ get_affinity(int tnum, pthread_attr_t *attr, cpu_set_t *cpu_set)
 
 }
 
-compare_affinity(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
+void compare_affinity(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 {
 	cpu_set_t exp_cpus, act_cpus;
 
@@ -79,7 +80,7 @@ compare_affinity(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 	}
 }
 
-get_detachstate(int tnum, pthread_attr_t *attr, int *state)
+void get_detachstate(int tnum, pthread_attr_t *attr, int *state)
 {
 	int rc;
 
@@ -91,7 +92,7 @@ get_detachstate(int tnum, pthread_attr_t *attr, int *state)
 	}
 }
 
-compare_detachstate(int tnum, pthread_attr_t *exp_attr,
+void compare_detachstate(int tnum, pthread_attr_t *exp_attr,
 		pthread_attr_t *act_attr)
 {
 
@@ -107,7 +108,7 @@ compare_detachstate(int tnum, pthread_attr_t *exp_attr,
 	}
 }
 
-get_guardsize(int tnum, pthread_attr_t *attr, int *gsize)
+void get_guardsize(int tnum, pthread_attr_t *attr, size_t *gsize)
 {
 	int rc;
 
@@ -134,7 +135,7 @@ void compare_guardsize(int tnum, pthread_attr_t *exp_attr,
 	}
 }
 
-get_inheritsched(int tnum, pthread_attr_t *attr, int *isched)
+void get_inheritsched(int tnum, pthread_attr_t *attr, int *isched)
 {
 	int rc;
 
@@ -161,7 +162,7 @@ void compare_inheritsched(int tnum, pthread_attr_t *exp_attr,
 	}
 }
 
-get_schedparam(int tnum, pthread_attr_t *attr, int *prio)
+void get_schedparam(int tnum, pthread_attr_t *attr, int *prio)
 {
 	int rc;
 	struct sched_param param;
@@ -175,7 +176,7 @@ get_schedparam(int tnum, pthread_attr_t *attr, int *prio)
 	*prio = param.__sched_priority;
 }
 
-compare_schedparam(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
+void compare_schedparam(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 {
 	int exp_prio, act_prio;
 
@@ -189,7 +190,7 @@ compare_schedparam(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 	}
 }
 
-get_schedpolicy(int tnum, pthread_attr_t *attr, int *policy)
+void get_schedpolicy(int tnum, pthread_attr_t *attr, int *policy)
 {
 	int rc;
 
@@ -201,7 +202,7 @@ get_schedpolicy(int tnum, pthread_attr_t *attr, int *policy)
 	}
 }
 
-compare_schedpolicy(int tnum, pthread_attr_t *exp_attr,
+void compare_schedpolicy(int tnum, pthread_attr_t *exp_attr,
 			pthread_attr_t *act_attr)
 {
 	int exp_policy, act_policy;
@@ -216,7 +217,7 @@ compare_schedpolicy(int tnum, pthread_attr_t *exp_attr,
 	}
 }
 
-get_scope(int tnum, pthread_attr_t *attr, int *scope)
+void get_scope(int tnum, pthread_attr_t *attr, int *scope)
 {
 	int rc;
 
@@ -228,7 +229,7 @@ get_scope(int tnum, pthread_attr_t *attr, int *scope)
 	}
 }
 
-compare_scope(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
+void compare_scope(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 {
 	int exp_scope, act_scope;
 
@@ -242,7 +243,7 @@ compare_scope(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 	}
 }
 
-int get_stack(pthread_attr_t *attr, void **addrp, int *sizep)
+int get_stack(pthread_attr_t *attr, void **addrp, size_t *sizep)
 {
 	int rc;
 
@@ -259,7 +260,7 @@ int get_stack(pthread_attr_t *attr, void **addrp, int *sizep)
 void compare_stack(int tnum, pthread_attr_t *exp_attr,
 		pthread_attr_t *act_attr)
 {
-	int exp_size, act_size;
+	size_t exp_size, act_size;
 	void *exp_addr, *act_addr;
 
 	get_stack(exp_attr, &exp_addr, &exp_size);
@@ -273,7 +274,7 @@ void compare_stack(int tnum, pthread_attr_t *exp_attr,
 	}
 }
 
-compare_attr(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
+void compare_attr(int tnum, pthread_attr_t *exp_attr, pthread_attr_t *act_attr)
 {
 
 	dump_attr("Expected attr", exp_attr);
@@ -329,7 +330,7 @@ void *do_work(void *arg)
 	 */
 	rc = pthread_barrier_wait(&barrier);
 	if (rc != PTHREAD_BARRIER_SERIAL_THREAD && rc != 0) {
-		fprintf(logfp, "%d: pthread_barrier_wait() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_barrier_wait() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -355,7 +356,7 @@ void *do_work(void *arg)
 	 */
 	compare_attr(tnum, &exp_attr, &act_attr);
 
-	fprintf(logfp, "%d: Thread %lu: exiting, rc 0\n", tnum,
+	fprintf(logfp, "%ld: Thread %lu: exiting, rc 0\n", tnum,
 			pthread_self());
 	fflush(logfp);
 
@@ -421,7 +422,7 @@ pthread_t *create_threads(int n)
 
 		rc = pthread_create(&tid, attr, do_work, (void *)i);
 		if (rc < 0) {
-			fprintf(logfp, "pthread_create(): i %d, rc %d, "
+			fprintf(logfp, "pthread_create(): i %ld, rc %d, "
 					"error %s\n", i, rc, strerror(errno));
 			do_exit(1);
 		}
@@ -439,7 +440,6 @@ int wait_for_threads(pthread_t *tid_list, int n)
 {
 	int i;
 	int rc;
-	int status;
 	int *statusp;
 	int exit_status;
 
@@ -463,12 +463,11 @@ int wait_for_threads(pthread_t *tid_list, int n)
 }
 
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int i;
 	int rc;
-	int status;
 	pthread_t *tid_list;
 	char log_file[256];
 
@@ -547,4 +546,7 @@ main(int argc, char *argv[])
 	fprintf(logfp, "Exiting with status %d\n", rc);
 
 	do_exit(rc);
+
+	/* not reached */
+	return 0;
 }
