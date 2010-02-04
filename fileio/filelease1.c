@@ -95,7 +95,7 @@ struct test_arg {
 
 struct test_arg test_data[3];
 
-int do_child(int idx)
+void do_child(int idx)
 {
 	int type = test_data[idx].type;
 	int fd = test_data[idx].fd;
@@ -200,9 +200,9 @@ void child_handler(int sig)
 	do_exit(-1);
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	int i, status, rc;
+	int i;
 	int pid;
 
 	if (test_done()) {
@@ -259,4 +259,7 @@ main(int argc, char *argv[])
 	do_wait(3);
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
