@@ -21,6 +21,7 @@ extern int test_checkpoint_done();
 extern void set_checkpoint_ready(void);
 extern int do_wait(int num_children);
 extern void copy_data(char *srcfile, char *destfile);
+extern void print_exit_status(int pid, int status);
 
 extern char *freezer_mountpoint(void);
 /* right now, subsys must always be "freezer" */
