@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libcrtest.h>
+#define __USE_UNIX98
 #include <pthread.h>
 
 #define	ERROR_EXIT	((void *)1)
@@ -19,7 +20,7 @@ pthread_mutex_t dump_lock;
 pthread_key_t key;
 
 struct thread_info {
-	int tid;
+	long tid;
 	int concurrency;
 	void *specific;
 	sigset_t sigmask;
@@ -34,17 +35,16 @@ static void usage(char *argv[])
 	do_exit(1);
 }
 
-set_thread_info(int tnum)
+void set_thread_info(long tnum)
 {
 	int rc;
 	void *specific;
-	void *sp2;
 
 	specific = (void *)pthread_self();
 
 	rc = pthread_setspecific(key, specific);
 	if (rc < 0) {
-		fprintf(logfp, "%d: pthread_setspecific() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_setspecific() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -54,7 +54,7 @@ set_thread_info(int tnum)
 	 */
 }
 
-get_thread_info(int tnum, struct thread_info *tinfo)
+void get_thread_info(long tnum, struct thread_info *tinfo)
 {
 	int rc;
 
@@ -63,7 +63,7 @@ get_thread_info(int tnum, struct thread_info *tinfo)
 	tinfo->specific = pthread_getspecific(key);
 
 	if (tinfo->specific != (void *)tinfo->tid) {
-		fprintf(logfp, "%d: pthread_getspcific(): expected %p, actual "
+		fprintf(logfp, "%ld: pthread_getspcific(): expected %p, actual "
 				"%p\n", tnum, (void *)tinfo->tid,
 				tinfo->specific);
 		do_exit(1);
@@ -71,7 +71,7 @@ get_thread_info(int tnum, struct thread_info *tinfo)
 
 	rc = pthread_sigmask(SIG_SETMASK, NULL, &tinfo->sigmask);
 	if (rc < 0) {
-		fprintf(logfp, "%d: pthread_sigmask() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_sigmask() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -79,13 +79,13 @@ get_thread_info(int tnum, struct thread_info *tinfo)
 	rc = pthread_getschedparam(pthread_self(), &tinfo->sched_policy,
 				&tinfo->sched_param);
 	if (rc < 0) {
-		fprintf(logfp, "%d: pthread_getschedparam() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_getschedparam() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
 }
 
-compare_thread_info(int tnum, struct thread_info *exp_tinfo,
+void compare_thread_info(int tnum, struct thread_info *exp_tinfo,
 		struct thread_info *act_tinfo)
 {
 	int rc;
@@ -140,7 +140,7 @@ compare_thread_info(int tnum, struct thread_info *exp_tinfo,
 
 void *do_work(void *arg)
 {
-	int tnum = (int)arg;
+	long tnum = (long)arg;
 	int rc;
 	struct thread_info exp_tinfo, act_tinfo;
 
@@ -151,7 +151,7 @@ void *do_work(void *arg)
 
 	get_thread_info(tnum, &exp_tinfo);
 
-	fprintf(logfp, "%d: Thread %lu: waiting for checkpoint\n", tnum,
+	fprintf(logfp, "%ld: Thread %lu: waiting for checkpoint\n", tnum,
 			pthread_self());
 	fflush(logfp);
 
@@ -160,7 +160,7 @@ void *do_work(void *arg)
 	 */
 	rc = pthread_barrier_wait(&barrier);
 	if (rc != PTHREAD_BARRIER_SERIAL_THREAD && rc != 0) {
-		fprintf(logfp, "%d: pthread_barrier_wait() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_barrier_wait() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -181,7 +181,7 @@ void *do_work(void *arg)
 	 */
 	compare_thread_info(tnum, &exp_tinfo, &act_tinfo);
 
-	fprintf(logfp, "%d: Thread %lu: exiting, rc 0\n", tnum,
+	fprintf(logfp, "%ld: Thread %lu: exiting, rc 0\n", tnum,
 			pthread_self());
 	fflush(logfp);
 
@@ -224,7 +224,7 @@ pthread_attr_t *alloc_thread_attr()
 
 pthread_t *create_threads(int n)
 {
-	int i;
+	long i;
 	int rc;
 	pthread_t *tid_list;
 	pthread_t tid;
@@ -246,7 +246,7 @@ pthread_t *create_threads(int n)
 
 		rc = pthread_create(&tid, attr, do_work, (void *)i);
 		if (rc < 0) {
-			fprintf(logfp, "pthread_create(): i %d, rc %d, "
+			fprintf(logfp, "pthread_create(): i %ld, rc %d, "
 					"error %s\n", i, rc, strerror(errno));
 			do_exit(1);
 		}
@@ -264,7 +264,6 @@ int wait_for_threads(pthread_t *tid_list, int n)
 {
 	int i;
 	int rc;
-	int status;
 	int *statusp;
 	int exit_status;
 
@@ -287,12 +286,11 @@ int wait_for_threads(pthread_t *tid_list, int n)
 	return exit_status;
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int i;
 	int rc;
-	int status;
 	pthread_t *tid_list;
 	char log_file[256];
 
@@ -373,4 +371,7 @@ main(int argc, char *argv[])
 	fprintf(logfp, "Exiting with status %d\n", rc);
 
 	do_exit(rc);
+
+	/* not reached */
+	return 0;
 }
