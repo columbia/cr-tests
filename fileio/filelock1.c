@@ -155,12 +155,10 @@ void handler(int sig)
 
 int do_child1(int idx)
 {
-	int rc;
 	int locked_by_me;
 	int i;
 	int num_locks;
-	int failed;
-	
+
 	signal(SIGINT, handler);
 
 	num_locks = sizeof(locks_list) / sizeof(struct test_arg);
@@ -214,6 +212,9 @@ int do_child1(int idx)
 	pause();
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
 
 /*
@@ -281,7 +282,7 @@ void child_handler(int sig)
 	do_exit(-1);
 }
 
-usage(char *argv[])
+void usage(char *argv[])
 {
 	fprintf(logfp, "Usage: %s [-m]\n", argv[0]);
 	fprintf(logfp, "\tTest POSIX (advisory) file locks (without -m)\n");
@@ -290,9 +291,9 @@ usage(char *argv[])
 	do_exit(1);
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	int i, c, status, rc;
+	int i, c;
 
 	logfp = fopen(LOG_FILE, "w");
 	if (!logfp) {
@@ -376,4 +377,7 @@ main(int argc, char *argv[])
 	do_wait(2);
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
