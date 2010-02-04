@@ -87,7 +87,7 @@ void test_lease(int fd, int exp_type)
 	return;
 }
 
-set_signal_action(int sig, void(*action)(int, siginfo_t *, void *))
+void set_signal_action(int sig, void(*action)(int, siginfo_t *, void *))
 {
 	int rc;
 	struct sigaction act;
@@ -181,6 +181,9 @@ int do_child1(int idx)
 		sleep(1);
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
 
 /* Lease breaker */
@@ -234,6 +237,9 @@ int do_child2(int idx)
 	}
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
 
 void setup_test_data()
@@ -265,7 +271,7 @@ void setup_test_data()
 	return;
 }
 
-kill_children(int sig)
+void kill_children(int sig)
 {
 	if (pid1)
 		kill(pid1, sig);
@@ -299,7 +305,6 @@ int create_child(int idx, int (*child_func)(int))
 
 void child_handler(int sig, siginfo_t *info, void *arg)
 {
-	int i;
 	int rc;
 	int status;
 
@@ -341,10 +346,9 @@ failed:
 	do_exit(1);
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	int i, status, rc;
-	int pid;
+	int i;
 
 	if (test_done()) {
 		printf("Remove %s before running test\n", TEST_DONE);
@@ -397,4 +401,7 @@ main(int argc, char *argv[])
 		pause();
 
 	do_exit(9); /* should not get here */
+
+	/* not reached */
+	return 0;
 }
