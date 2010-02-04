@@ -29,7 +29,7 @@ static void usage(char *argv[])
 
 void * do_work(void *arg)
 {
-	int tnum = (int)arg;
+	long tnum = (long)arg;
 	int rc;
 	int lock_acquired;
 
@@ -39,14 +39,14 @@ void * do_work(void *arg)
 	 */
 	rc = pthread_barrier_wait(&threads_created);
 	if (rc != PTHREAD_BARRIER_SERIAL_THREAD && rc != 0) {
-		fprintf(logfp, "%d: pthread_barrier_wait() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_barrier_wait() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
 
 	rc = pthread_mutex_trylock(&mutex);
 	if (rc && rc != EBUSY) {
-		fprintf(logfp, "%d: pthread_mutex_trylock() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_mutex_trylock() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -55,7 +55,7 @@ void * do_work(void *arg)
 	if (!rc)
 		lock_acquired++;
 
-	fprintf(logfp, "%d: Thread %lu: lock_acquired %d waiting for "
+	fprintf(logfp, "%ld: Thread %lu: lock_acquired %d waiting for "
 			"checkpoint\n", tnum, pthread_self(), lock_acquired);
 	fflush(logfp);
 
@@ -64,7 +64,7 @@ void * do_work(void *arg)
 	 */
 	rc = pthread_barrier_wait(&cr_ready);
 	if (rc != PTHREAD_BARRIER_SERIAL_THREAD && rc != 0) {
-		fprintf(logfp, "%d: pthread_barrier_wait() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_barrier_wait() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -77,7 +77,7 @@ void * do_work(void *arg)
 
 	rc = pthread_mutex_trylock(&mutex);
 	if (rc && rc != EBUSY) {
-		fprintf(logfp, "%d: pthread_mutex_trylock() failed, rc %d, "
+		fprintf(logfp, "%ld: pthread_mutex_trylock() failed, rc %d, "
 				"error %s\n", tnum, rc, strerror(errno));
 		do_exit(1);
 	}
@@ -87,7 +87,7 @@ void * do_work(void *arg)
 	 */
 	tstatus[tnum] = 0;
 	if (lock_acquired && !rc) {
-		fprintf(logfp, "%d: FAIL: I no longer hold the lock held "
+		fprintf(logfp, "%ld: FAIL: I no longer hold the lock held "
 				"before checkpoint/restart !!! rc %d "
 				"lock_acquired %d\n", tnum, rc, lock_acquired);
 		tstatus[tnum] = 1;
@@ -96,7 +96,7 @@ void * do_work(void *arg)
 	if (lock_acquired || !rc)
 		pthread_mutex_unlock(&mutex);
 
-	fprintf(logfp, "%d: Thread %lu: exiting, rc 0\n", tnum,
+	fprintf(logfp, "%ld: Thread %lu: exiting, rc 0\n", tnum,
 			pthread_self());
 	fflush(logfp);
 
@@ -106,7 +106,7 @@ void * do_work(void *arg)
 
 pthread_t *create_threads(int n)
 {
-	int i;
+	long i;
 	int rc;
 	pthread_t *tid_list;
 	pthread_t tid;
@@ -125,7 +125,7 @@ pthread_t *create_threads(int n)
 	for (i = 0; i < n; i++) {
 		rc = pthread_create(&tid, attr, do_work, (void *)i);
 		if (rc < 0) {
-			fprintf(logfp, "pthread_create(): i %d, rc %d, "
+			fprintf(logfp, "pthread_create(): i %ld, rc %d, "
 					"error %s\n", i, rc, strerror(errno));
 			do_exit(1);
 		}
@@ -143,7 +143,6 @@ int wait_for_threads(pthread_t *tid_list, int n)
 {
 	int i;
 	int rc;
-	int status;
 	int *statusp;
 	int exit_status;
 
@@ -166,7 +165,7 @@ int wait_for_threads(pthread_t *tid_list, int n)
 	return exit_status;
 }
 
-init_mutex(pthread_mutex_t *mutex)
+void init_mutex(pthread_mutex_t *mutex)
 {
 	int rc;
 	pthread_mutexattr_t mutex_attr;
@@ -197,12 +196,11 @@ init_mutex(pthread_mutex_t *mutex)
 	}
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	int c;
 	int i;
 	int rc;
-	int status;
 	pthread_t *tid_list;
 	char log_file[256];
 
@@ -282,4 +280,7 @@ main(int argc, char *argv[])
 	fprintf(logfp, "Exiting with status %d\n", rc);
 
 	do_exit(rc);
+
+	/* not reached */
+	return 0;
 }
