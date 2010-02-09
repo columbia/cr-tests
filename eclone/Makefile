@@ -1,6 +1,6 @@
 #
 # libeclone.a is built/installed from user-cr git-tree. Point USER_CR_DIR
-# to the directory containing libeclone.a and genstack.h
+# to the directory containing genstack.h
 #
 USER_CR_DIR ?= ../../user-cr
 
@@ -8,7 +8,7 @@ CFLAGS = -Wall -I $(USER_CR_DIR)
 
 LDFLAGS =
 
-LIB_ECLONE = $(USER_CR_DIR)/libeclone.a
+LIB_ECLONE = -leclone
 
 PROGS = eclone-1 eclone-2 eclone-3 eclone-4 eclone-5
 
