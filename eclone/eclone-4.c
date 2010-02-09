@@ -46,10 +46,10 @@ static int do_eclone(int (*child_fn)(void *), void *child_arg,
 
 	memset(&clone_args, 0, sizeof(clone_args));
 	clone_args.clone_flags_high = (u64)1 << 33;
-	clone_args.child_stack = (u64)(int)genstack_sp(stack);
+	clone_args.child_stack = (u64)genstack_sp(stack);
 	clone_args.child_stack_size = (u64)0;
-	clone_args.parent_tid_ptr = (u64)((int)&parent_tid);
-	clone_args.child_tid_ptr = (u64)((int)&child_tid);
+	clone_args.parent_tid_ptr = (u64)(&parent_tid);
+	clone_args.child_tid_ptr = (u64)(&child_tid);
 	clone_args.nr_pids = nr_pids;
 
 	if (verbose) {
