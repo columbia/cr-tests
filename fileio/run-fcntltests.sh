@@ -54,6 +54,8 @@ checkpoint()
 	if [ $ret -ne 0 ]; then
 		$ECHO "***** FAIL: Checkpoint of $pid failed"
 		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
+		killall -9 `basename $TEST_CMD`
+		thaw
 		exit 1;
 	fi
 }
