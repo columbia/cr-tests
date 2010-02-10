@@ -13,7 +13,7 @@
 #include <linux/futex.h>
 #include <sys/time.h>
 
-#include <atomic.h>
+#include "atomic.h"
 
 #ifndef SYS_futex
 #ifdef __NR_futex
