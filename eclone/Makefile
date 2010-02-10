@@ -6,7 +6,7 @@ USER_CR_DIR ?= ../../user-cr
 
 CFLAGS = -Wall -I $(USER_CR_DIR)
 
-LDFLAGS =
+LDFLAGS = -L $(USER_CR_DIR)
 
 LIB_ECLONE = -leclone
 
