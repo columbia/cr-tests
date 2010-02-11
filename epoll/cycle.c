@@ -258,7 +258,7 @@ label(wait_write, ret, ret + 0);
 label(do_write,
 	ret, write(pfd[1], HELLO, strlen(HELLO) + 1));
 	if (ret < (strlen(HELLO) + 1)) {
-		log("FAIL", "Unable to write all %d bytes of \"%s\" to %d\n",
+		log("FAIL", "Unable to write all %zu bytes of \"%s\" to %d\n",
 			 strlen(HELLO) + 1, HELLO, pfd[0]);
 		goto out;
 	}
@@ -292,7 +292,7 @@ label(wait_read, ret, ret + 0);
 label(do_read, ret, ret + 0);
 	ret = read(pfd[0], rbuf, strlen(HELLO) + 1);
 	if (ret < (strlen(HELLO) + 1)) {
-		log("FAIL", "Unable to read all %d bytes of \"%s\"\n",
+		log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;
 	}

@@ -171,7 +171,7 @@ label(wait_write,
 label(do_write,
 	ret, write(tube[1], HELLO, strlen(HELLO) + 1));
 	if (ret < (strlen(HELLO) + 1)) {
-		log("FAIL", "Unable to write all %d bytes of \"%s\"\n",
+		log("FAIL", "Unable to write all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;
 	}
@@ -201,7 +201,7 @@ label(wait_read,
 label(do_read,
 	ret, read(tube[0], rbuf, strlen(HELLO) + 1));
 	if (ret < (strlen(HELLO) + 1)) {
-		log("FAIL", "Unable to read all %d bytes of \"%s\"\n",
+		log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;
 	}

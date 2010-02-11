@@ -259,7 +259,7 @@ label(wait_write,
 	for (i = 0; i < num_sk; i++) {
 		ret = write(sk[i], HELLO, strlen(HELLO) + 1);
 		if (ret < (strlen(HELLO) + 1)) {
-			log("FAIL", "Unable to write all %d bytes of \"%s\" to sk[%d] (%d)\n",
+			log("FAIL", "Unable to write all %zu bytes of \"%s\" to sk[%d] (%d)\n",
 				 strlen(HELLO) + 1, HELLO, i, sk[i]);
 			goto out;
 		}
@@ -290,7 +290,7 @@ label(do_read, ret, ret + 0);
 	for (i = 0; i < num_sk; i++) {
 		ret = read(sk[i], rbuf, strlen(HELLO) + 1);
 		if (ret < (strlen(HELLO) + 1)) {
-			log("FAIL", "Unable to read all %d bytes of \"%s\"\n",
+			log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 				 strlen(HELLO) + 1, HELLO);
 			goto out;
 		}
