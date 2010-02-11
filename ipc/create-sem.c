@@ -7,6 +7,7 @@
  * to be checkpointed.  Then check whether the sem is still
  * there.  If so, then create ./sem-ok
  */
+#include <grp.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -15,6 +16,8 @@
 #include <sys/sem.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include <libcrtest.h>
 
 int semid, semid2;
 
@@ -49,7 +52,7 @@ int check_sems(void)
 void dosetuid(int uid)
 {
 	int ret;
-	setgroups(NULL, 0);
+	setgroups(0, NULL);
 	ret = setgid(uid);
 	if (ret == -1) {
 		perror("setgid");
