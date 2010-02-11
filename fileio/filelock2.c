@@ -141,20 +141,15 @@ void handler(int sig)
  * signal us. This orderly exit will help parent distinguish this
  * exit from an unexpected exit by the children.
  */
-exit_cleanly()
+void exit_cleanly(void)
 {
         notify_one_event(event_fd2);
         pause();
 	do_exit(0);
 }
 
-int do_child1(int idx)
+void do_child1(int idx)
 {
-	int rc;
-	int i;
-	int num_locks;
-	int failed;
-	
 	fprintf(logfp, "%d: Child %d starting up\n", getpid(), idx);
 	fflush(logfp);
 
@@ -188,13 +183,8 @@ int do_child1(int idx)
 	exit_cleanly();
 }
 
-int do_child2(int idx)
+void do_child2(int idx)
 {
-	int rc;
-	int i;
-	int num_locks;
-	int failed;
-	
 	fprintf(logfp, "%d: Child %d starting up\n", getpid(), idx);
 	fflush(logfp);
 
@@ -271,7 +261,7 @@ void setup_test_file()
 
 int pid1, pid2;
 
-kill_children(int sig)
+void kill_children(int sig)
 {
 	signal(SIGCHLD, SIG_DFL);
 	if (pid1)
@@ -299,7 +289,7 @@ void child_handler(int sig)
 	do_exit(-1);
 }
 
-usage(char *argv[])
+void usage(char *argv[])
 {
 	fprintf(logfp, "Usage: %s [-m]\n", argv[0]);
 	fprintf(logfp, "\tTest POSIX (advisory) file locks (without -m)\n");
@@ -308,7 +298,7 @@ usage(char *argv[])
 	do_exit(1);
 }
 
-int create_child(int idx, int (*child_func)(int))
+int create_child(int idx, void (*child_func)(int))
 {
 	int rc;
 
@@ -327,9 +317,9 @@ int create_child(int idx, int (*child_func)(int))
 	return rc;
 }
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	int i, c, status, rc;
+	int i, c;
 
 	logfp = fopen(LOG_FILE, "w");
 	if (!logfp) {
@@ -418,4 +408,7 @@ main(int argc, char *argv[])
 	kill_children(SIGINT);
 
 	do_exit(0);
+
+	/* not reached */
+	return 0;
 }
