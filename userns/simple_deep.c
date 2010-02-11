@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #include <libcrtest.h>
 #include "../clone.h"
@@ -39,10 +40,11 @@ void wait_on(char *fnam)
 	}
 }
 
+int do_clone(long depth);
+
 int do_child(void *vargv)
 {
 	long depth = (long) vargv;
-	int ret;
 
 	/* TODO: add checks for keychain here */
 	if (depth)
