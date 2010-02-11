@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #include <libcrtest.h>
 #include "../clone.h"
