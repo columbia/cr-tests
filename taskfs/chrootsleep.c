@@ -8,6 +8,7 @@
 #include <libcrtest.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <sched.h>
 
@@ -23,13 +24,14 @@ int child(void *data)
 		return 1;
 	close(ret);
 	sleep(300);
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
 	int ret, pid;
 	int status;
-	int stack;
 	char *freezer = "1";
 
 	if (argc > 1)
