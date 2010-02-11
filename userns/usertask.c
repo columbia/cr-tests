@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <grp.h>
 #include <unistd.h>
 #include <asm/unistd.h>
 #include <sys/syscall.h>
@@ -50,13 +51,10 @@ void wait_on(char *fnam)
 
 int main(int argc, char *argv[])
 {
-	pid_t pid = getpid();
 	FILE *file;
 	int uid=501, gid=501;
 	char *freezer = "1";
-	int ret = 0;
 	int opt;
-	int fd;
 	int i;
 	int ngrp;
 	gid_t *grplist;
