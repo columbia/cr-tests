@@ -56,7 +56,7 @@ void get_affinity(int tnum, pthread_attr_t *attr, cpu_set_t *cpu_set)
 {
 	int rc;
 
-	fprintf(logfp, "sizeof(cpu_set_t) %d\n", sizeof(cpu_set_t));
+	fprintf(logfp, "sizeof(cpu_set_t) %zu\n", sizeof(cpu_set_t));
 
 	rc = pthread_attr_getaffinity_np(attr, sizeof(cpu_set_t), cpu_set);
 	if (rc < 0) {
@@ -129,8 +129,8 @@ void compare_guardsize(int tnum, pthread_attr_t *exp_attr,
 	get_guardsize(tnum, act_attr, &act_size);
 
 	if (exp_size != act_size) {
-		fprintf(logfp, "%d: Thread guard size mismatch, expected %d "
-				"actual %d\n", tnum, exp_size, act_size);
+		fprintf(logfp, "%d: Thread guard size mismatch, expected %zu "
+				"actual %zu\n", tnum, exp_size, act_size);
 		do_exit(1);
 	}
 }
@@ -267,7 +267,7 @@ void compare_stack(int tnum, pthread_attr_t *exp_attr,
 	get_stack(act_attr, &act_addr, &act_size);
 
 	if (act_addr != exp_addr || act_size != exp_size) {
-		fprintf(logfp, "%d: Expected: (%p, %d), actual (%p, %d)\n",
+		fprintf(logfp, "%d: Expected: (%p, %zu), actual (%p, %zu)\n",
 				tnum, exp_addr, exp_size, act_addr, act_size);
 		fflush(logfp);
 		do_exit(1);

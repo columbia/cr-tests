@@ -93,7 +93,7 @@ pthread_t *create_threads(int n)
 
 	tid_list = (pthread_t *)malloc(n * sizeof(pthread_t));
 	if (!tid_list) {
-		fprintf(logfp, "malloc(%d) failed, error %s\n",
+		fprintf(logfp, "malloc(%zu) failed, error %s\n",
 				n * sizeof(pthread_t), strerror(errno));
 		do_exit(1);
 	}
