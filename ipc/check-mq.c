@@ -18,6 +18,8 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include <libcrtest.h>
+
 int msgid1, msgid2;
 
 #define MSG1 "message1"
