@@ -1,6 +1,6 @@
 local_dir := ipc
 
-local_progs := $(addprefix $(local_dir)/,create-sem creat-shm check-mq)
+local_progs := $(addprefix $(local_dir)/,create-sem create-shm check-mq)
 
 progs += $(local_progs)
 test_clean += $(addprefix $(local_dir)/,cr_sem* cr_mq* cr_shm*)
