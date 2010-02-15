@@ -51,8 +51,16 @@ checkpoint()
 	$ECHO "\t- Checkpoint: $CHECKPOINT $pid \> $CHECKPOINT_FILE"
 	$CHECKPOINT $pid > $CHECKPOINT_FILE
 	ret=$?
+	# At the moment we expect failure because checkpoint
+	# of file locks is not supported
 	if [ $ret -ne 0 ]; then
-		$ECHO "***** FAIL: Checkpoint of $pid failed"
+		$ECHO "***** PASS: Checkpoint of $pid failed"
+		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
+		killall -9 `basename $TEST_CMD`
+		thaw
+		exit 0;
+	else
+		$ECHO "***** FAIL: Checkpoint of $pid did not fail"
 		ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 		killall -9 `basename $TEST_CMD`
 		thaw
