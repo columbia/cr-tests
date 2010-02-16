@@ -8,7 +8,7 @@ cd $dir
 
 BASE_DIR="../.."
 
-FILEIO="../fileio/fileio1"
+FILEIO="../../fileio/fileio1"
 
 ECHO="/bin/echo -e"
 
