@@ -25,7 +25,7 @@ all:
 
 include $(addsuffix /module.mk,$(modules))
 
-progs += ns_exec mysu
+progs += mysu
 
 .PHONY: all
 all: $(progs)

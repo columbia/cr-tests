@@ -83,7 +83,7 @@ while [ $kidsdone -eq 0 ]; do checkchildren counter_out; done
 echo "... all jobs started"
 canceltimer
 
-pids=`ps -ef | grep crcounter | grep -v grep | grep -v ns_exec | awk -F\  '{ print $2 '}`
+pids=`ps -ef | grep crcounter | grep -v grep | grep -v nsexec | awk -F\  '{ print $2 '}`
 
 cnt=1
 

@@ -110,3 +110,8 @@ if [ $? -ne 0 ]; then
 	echo "BROK: restart not found in your path"
 	exit 1
 fi
+NSEXEC=`which nsexec`
+if [ $? -ne 0 ]; then
+	echo "BROK: nsexec not found in your path"
+	exit 1
+fi

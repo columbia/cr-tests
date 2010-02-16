@@ -63,7 +63,7 @@ if [ $fail -ne 0 ]; then
 	echo "WARN there were $fail restart failures"
 fi
 
-numjobs=`ps -ef | grep crcounter | grep -v grep | grep -v ns_exec | wc -l`
+numjobs=`ps -ef | grep crcounter | grep -v grep | grep -v nsexec | wc -l`
 killall crcounter
 
 if [ $numjobs -ne 1 ]; then

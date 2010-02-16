@@ -3,12 +3,13 @@
 # Author: Serge Hallyn
 
 RESTART=`which restart`
+NSEXEC=`which nsexec`
 
 dir=`mktemp -p . -d -t cr_simple_XXXXXXX` || (echo "mktemp failed"; exit 1)
 
 echo "Using output dir $dir"
 
-../ns_exec -cp ./ckpt  $dir
+$NSEXEC -cp ./ckpt  $dir
 if [ ! -f $dir/cr-test.out ]; then
 	echo "FAIL - ckpt did not create $dir/cr-test.out"
 	exit 1

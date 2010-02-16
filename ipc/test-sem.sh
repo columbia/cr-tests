@@ -33,7 +33,7 @@ do_checkpoint() {
 
 echo "XXX Test 1: simple restart with SYSVIPC semaphores"
 clean_all
-../../ns_exec -ci ../create-sem &
+$NSEXEC -ci ../create-sem &
 do_checkpoint
 # Restart it.  If it finds the sem it created, it creates sem-ok
 $RESTART --pids < ckpt.sem
@@ -45,7 +45,7 @@ echo "PASS"
 
 echo "XXX Test 2: re-create root-owned semaphores as non-root user"
 clean_all
-../../ns_exec -ci ../create-sem -u 501 &
+$NSEXEC -ci ../create-sem -u 501 &
 do_checkpoint
 # restart should fail to create sems
 $RESTART --pids < ckpt.sem
@@ -58,7 +58,7 @@ echo "PASS"
 # Create semaphores as non-root user
 echo "XXX Test 3: create semaphores as non-root user and restart"
 clean_all
-../../ns_exec -ci ../create-sem -e -u 501 &
+$NSEXEC -ci ../create-sem -e -u 501 &
 do_checkpoint
 # restart should be able to create sems
 $RESTART --pids  --copy-status < ckpt.sem
@@ -74,7 +74,7 @@ if [ $uid -eq -1 ]; then
 	echo "not running ltp-uid test"
 	exit 0
 fi
-../../ns_exec -ci ../create-sem -r -u $uid &
+$NSEXEC -ci ../create-sem -r -u $uid &
 do_checkpoint
 chown $uid ckpt.sem
 setcap cap_sys_admin+pe $RESTART

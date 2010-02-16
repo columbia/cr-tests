@@ -33,7 +33,7 @@ do_checkpoint() {
 
 echo "XXX Test 1: simple restart with SYSVIPC shm"
 clean_all
-../../ns_exec -ci ../create-shm &
+$NSEXEC -ci ../create-shm &
 do_checkpoint
 # Restart it.  If it finds the shm it created, it creates shm-ok
 $RESTART --pids --copy-status < ckpt.shm
@@ -45,7 +45,7 @@ echo "PASS"
 
 echo "XXX Test 2: re-create root-owned shm as non-root user"
 clean_all
-../../ns_exec -ci ../create-shm -u 501 &
+$NSEXEC -ci ../create-shm -u 501 &
 do_checkpoint
 # restart should fail to create shm
 $RESTART --pids --copy-status < ckpt.shm
@@ -58,7 +58,7 @@ echo "PASS"
 # Create shm as non-root user
 echo "XXX Test 3: create shm as non-root user and restart"
 clean_all
-../../ns_exec -ci ../create-shm -e -u 501 &
+$NSEXEC -ci ../create-shm -e -u 501 &
 do_checkpoint
 # restart should be able to create shm
 $RESTART --pids --copy-status < ckpt.shm
@@ -74,7 +74,7 @@ if [ $uid -eq -1 ]; then
 	echo "not running ltp-uid test"
 	exit 0
 fi
-../../ns_exec -ci ../create-shm -r -u $uid &
+$NSEXEC -ci ../create-shm -r -u $uid &
 do_checkpoint
 chown $uid ckpt.shm
 setcap cap_sys_admin+pe $RESTART

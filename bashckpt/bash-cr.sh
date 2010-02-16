@@ -30,7 +30,7 @@ echo results in $tmpdir ' EXIT
 echo "Running ./bash-simple.sh in background."
 ./bash-simple.sh $$ $tmpdir &
 
-# note: $! is the pid of ns_exec, not the command, so we need to be a
+# note: $! is the pid of nsexec, not the command, so we need to be a
 # little more clever to derive the pid to pass to ip link set netns
 
 echo -n "Waiting for background script to start... "

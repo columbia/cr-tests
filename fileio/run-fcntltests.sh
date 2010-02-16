@@ -41,8 +41,7 @@ CHECKPOINT_DONE="checkpoint-done"
 LOGS_DIR="logs.d"
 DATA_DIR="data.d"
 
-NS_EXEC="../../ns_exec"
-NS_EXEC_ARGS="-cgpuimP $TEST_PID_FILE"
+NSEXEC_ARGS="-cgpuimP $TEST_PID_FILE"
 
 checkpoint()
 {
@@ -95,7 +94,7 @@ function create_container()
 {
 	local pid;
 
-	cmdline="$NS_EXEC $NS_EXEC_ARGS -- $TEST_CMD $TEST_ARGS"
+	cmdline="$NSEXEC $NSEXEC_ARGS -- $TEST_CMD $TEST_ARGS"
 
 	$ECHO "\t- Creating container:"
 	$ECHO "\t- $cmdline"
@@ -224,7 +223,7 @@ while [ $cnt -lt 20 ]; do
 	ps -efL |grep $TEST_CMD >> $SCRIPT_LOG
 	$ECHO "\t- num_pids1 $num_pids1, num_pids2 $num_pids2";
 
-	# ns_exec pid is parent-pid of restarted-container-init
+	# nsexec pid is parent-pid of restarted-container-init
 	nspid=`pidof restart`
 
 	if [ "x$nspid" == "x" ]; then

@@ -33,7 +33,7 @@ do_checkpoint() {
 
 echo "XXX Test 1: simple restart with SYSVIPC msq"
 clean_all
-../../ns_exec -ci ../check-mq &
+$NSEXEC -ci ../check-mq &
 do_checkpoint
 # Restart it.  If it finds the msq it created, it creates msq-ok
 $RESTART --pids < ckpt.msq
@@ -45,7 +45,7 @@ echo "PASS"
 
 echo "XXX Test 2: re-create root-owned msq as non-root user"
 clean_all
-../../ns_exec -ci ../check-mq -u 501 &
+$NSEXEC -ci ../check-mq -u 501 &
 do_checkpoint
 # restart should fail to create msq
 $RESTART --pids --copy-status < ckpt.msq
@@ -58,7 +58,7 @@ echo "PASS"
 # Create msq as non-root user
 echo "XXX Test 3: create msq as non-root user and restart"
 clean_all
-../../ns_exec -ci ../check-mq -e -u 501 &
+$NSEXEC -ci ../check-mq -e -u 501 &
 do_checkpoint
 # restart should be able to create msq
 $RESTART --pids --copy-status < ckpt.msq

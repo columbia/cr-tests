@@ -21,7 +21,7 @@ my_debug()
 killall crcounter
 
 echo BAD > $dir/counter_out
-../ns_exec -m ./crcounter $dir &
+$NSEXEC -m ./crcounter $dir &
 while [ "`cat $dir/counter_out`" == "BAD" ]; do : ; done
 pid=`pidof crcounter`
 

@@ -23,7 +23,6 @@ TEST_LOG_SNAP="$dir/log.${test_case}.snap"
 
 LOG_FILE="$dir/f1-loop.log"
 TEST_CMD="./$test_case"
-NS_EXEC="../ns_exec"
 
 # Make sure no stray TEST_CMD from another run is still going
 killall $TEST_CMD
@@ -46,7 +45,7 @@ for testnum in `seq 1 $NUMTESTS`; do
 	# Remove CKPT_READY file, start the application and let app tell
 	# us when it is ready
 	rm -f $CKPT_READY;
-	$NS_EXEC -m $TEST_CMD -d $dir -c $SRC_FILE $DEST_FILE &
+	$NSEXEC -m $TEST_CMD -d $dir -c $SRC_FILE $DEST_FILE &
 	while [ ! -f $CKPT_READY ]; do
 		sleep 1;
 	done;
@@ -94,7 +93,7 @@ for testnum in `seq 1 $NUMTESTS`; do
 	rm -f $COPY_DONE;
 
 	# Restart.
-	$NS_EXEC -m rstrsh $CKPT_FILE &
+	$NSEXEC -m rstrsh $CKPT_FILE &
 	ret=$?
 
 	if [ $ret -ne 0 ]; then
@@ -112,9 +111,9 @@ for testnum in `seq 1 $NUMTESTS`; do
 		exit 1
 	fi
 
-	nspid=`pidof $NS_EXEC`
+	nspid=`pidof $NSEXEC`
 	if [ "x$nspid" == "x" ]; then
-		echo "Can't find pid of $NS_EXEC"
+		echo "Can't find pid of $NSEXEC"
 		exit 1
 	fi
 
