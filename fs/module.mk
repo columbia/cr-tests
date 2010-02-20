@@ -1,5 +1,5 @@
 local_dir := fs
-local_progs := $(addprefix $(local_dir)/, file dir)
+local_progs := $(addprefix $(local_dir)/, file dir do_ckpt)
 
 sources += $(addprefix $(local_dir)/,libeptest.c)
 progs += $(local_progs)
