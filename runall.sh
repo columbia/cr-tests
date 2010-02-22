@@ -49,6 +49,9 @@ if [ $? -eq 0 ]; then
 	exit 1
 fi
 
+echo Testing kernel version $(uname -r)
+echo
+
 echo Running simple checkpoint/restart test
 pushd simple
 bash runtests.sh
