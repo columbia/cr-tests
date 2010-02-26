@@ -90,13 +90,6 @@ function restart_container
 	sleep 1
 
 	$cmdline < $CHECKPOINT_FILE >> $SCRIPT_LOG 2>&1 &
-	ret=$?
-
-	if [ $ret -ne 0 ]; then
-		$ECHO "***** FAIL: Restart of $pid failed"
-		ps aux |grep $TEST_CMD >> $SCRIPT_LOG
-		exit 1;
-	fi
 }
 
 function wait_for_checkpoint_ready()
