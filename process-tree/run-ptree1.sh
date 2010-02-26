@@ -174,7 +174,7 @@ while [ $cnt -lt 15 ]; do
 	freezerdir=$freezermountpoint/$pid
 	freeze_pid $pid
 
-	num_pids1=`ps aux |grep $TEST_CMD | wc -l`
+	num_pids1=`pidof $TEST_CMD | wc -w`
 
 	create_fs_snapshot
 
@@ -196,7 +196,7 @@ while [ $cnt -lt 15 ]; do
 
 	sleep 3;
 
-	num_pids2=`ps aux |grep $TEST_CMD | wc -l`
+	num_pids2=`pidof $TEST_CMD | wc -w`
 	ps aux |grep $TEST_CMD >> $SCRIPT_LOG
 	$ECHO "\t- num_pids1 $num_pids1, num_pids2 $num_pids2";
 
