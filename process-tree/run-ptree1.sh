@@ -87,8 +87,6 @@ function restart_container
 	cmdline="$RESTART --pids --pidns --wait"
 	$ECHO "\t- $cmdline"
 
-	sleep 1
-
 	$cmdline < $CHECKPOINT_FILE >> $SCRIPT_LOG 2>&1 &
 }
 
@@ -177,8 +175,6 @@ while [ $cnt -lt 15 ]; do
 	num_pids1=`pidof $TEST_CMD | wc -w`
 
 	create_fs_snapshot
-
-	sleep 1;
 
 	checkpoint $pid
 
