@@ -188,7 +188,7 @@ while [ $cnt -lt 15 ]; do
 
 	thaw
 
-	sleep 3
+	wait
 
 	restore_fs_snapshot
 
