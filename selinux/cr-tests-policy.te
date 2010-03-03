@@ -12,15 +12,21 @@ files_type(ckpt_test_exec_t);
 type ckpt_test_1_t;
 typeattribute ckpt_test_1_t ckpt_test_domain;
 domain_type(ckpt_test_1_t)
+libs_use_shared_libs(ckpt_test_1_t)
+libs_use_ld_so(ckpt_test_1_t)
 domain_entry_file(ckpt_test_1_t, ckpt_test_exec_t)
 
 type ckpt_test_2_t;
 domain_type(ckpt_test_2_t)
+libs_use_shared_libs(ckpt_test_2_t)
+libs_use_ld_so(ckpt_test_2_t)
 typeattribute ckpt_test_2_t ckpt_test_domain;
 domain_entry_file(ckpt_test_2_t, ckpt_test_exec_t)
 
 type ckpt_test_3_t;
 domain_type(ckpt_test_3_t)
+libs_use_shared_libs(ckpt_test_3_t)
+libs_use_ld_so(ckpt_test_3_t)
 typeattribute ckpt_test_3_t ckpt_test_domain;
 domain_entry_file(ckpt_test_3_t, ckpt_test_exec_t)
 
