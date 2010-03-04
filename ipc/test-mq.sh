@@ -29,6 +29,7 @@ do_checkpoint() {
 	${CHECKPOINT} $pid > ckpt.msq
 	thaw
 	killall check-mq
+	wait
 }
 
 echo "XXX Test 1: simple restart with SYSVIPC msq"
