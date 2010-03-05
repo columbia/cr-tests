@@ -1,7 +1,7 @@
 local_dir := futex
 local_progs := $(addprefix $(local_dir)/,plain robust pi)
 
-MACHINE := $(shell gcc -dumpmachine)
+MACHINE := $(shell $(CC) -dumpmachine)
 ifeq ($(MACHINE:i386-%=i386),i386)
 ARCHOPTS := -march=i486
 endif

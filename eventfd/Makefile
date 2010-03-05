@@ -13,10 +13,10 @@ all: $(PROGS)
 	$(MAKE) -C ../libcrtest libcrtest.a
 
 libeptest.a: libeptest.o libeptest.h
-	ar cr libeptest.a libeptest.o
+	$(AR) cr libeptest.a libeptest.o
 
 $(PROGS): %: %.c $(LIBS)
-	gcc -Wall $(CFLAGS) -o $@ $< $(LIBS)
+	$(CC) -Wall $(CFLAGS) -o $@ $< $(LIBS)
 
 clean:
 	rm -f *.o libeptest.a $(PROGS)
