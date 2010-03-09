@@ -65,17 +65,17 @@ int main(int argc, char *argv[])
 	dup2(fileno(file), 1);
 	dup2(fileno(file), 2);
 
-	fprintf(file, "hello, world!\n");
+	fprintf(file, "Invoking checkpoint syscall... ");
 	fflush(file);
 
 	ret = syscall(__NR_checkpoint, pid, ckptfd, CHECKPOINT_SUBTREE, logfd);
 	if (ret < 0) {
+		fprintf(file, " FAILED.\n");
 		perror("checkpoint");
 		exit(2);
 	}
 
-	fprintf(file, "world, hello!\n");
-	fprintf(file, "ret = %d\n", ret);
+	fprintf(file, "PASSED.\nret = %d\n", ret);
 	fflush(file);
 	close(logfd);
 
