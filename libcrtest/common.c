@@ -68,6 +68,26 @@ void set_checkpoint_ready()
 	close(fd);
 }
 
+/* Signal ready for and await the checkpoint */
+void do_ckpt(void)
+{
+	int rc;
+
+	set_checkpoint_ready();
+
+	rc = access(CKPT_SKIP, F_OK);
+	if (rc == 0)
+		return;
+	else if (errno != ENOENT)
+		do_exit(1);
+
+	while (!test_checkpoint_done())
+		usleep(10000);
+	if (unlink(CKPT_DONE) == -1) {
+		/* perror("unlink(\"./checkpoint-done\")"); */
+	}
+}
+
 void print_exit_status(int pid, int status)
 {
 	fprintf(logfp, "Pid %d unexpected exit - ", pid);

@@ -3,6 +3,7 @@
 
 #define CKPT_READY		"checkpoint-ready"
 #define CKPT_DONE		"checkpoint-done"
+#define CKPT_SKIP		"checkpoint-skip"
 #define TEST_DONE		"test-done"
 
 extern FILE *logfp;
@@ -18,6 +19,7 @@ extern void do_exit(int status);
 extern int test_done(void);
 extern int test_checkpoint_done();
 extern void set_checkpoint_ready(void);
+extern void do_ckpt(void);
 extern int do_wait(int num_children);
 extern void copy_data(char *srcfile, char *destfile);
 extern void print_exit_status(int pid, int status);

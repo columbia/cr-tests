@@ -28,7 +28,4 @@ do { \
 /* like perror() except to the log */
 #define log_error(s) log("FAIL", "%s: %s\n", (s), strerror(errno))
 
-/* Signal ready for and await the checkpoint */
-void do_ckpt(void);
-
 #define HELLO "Hello world!\n"
