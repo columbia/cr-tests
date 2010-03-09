@@ -62,8 +62,8 @@ int main(int argc, char *argv[])
 
 	/* TODO these may no longer need to be closed? */
 	close(0);
-	close(1);
-	close(2);
+	dup2(fileno(file), 1);
+	dup2(fileno(file), 2);
 
 	fprintf(file, "hello, world!\n");
 	fflush(file);
