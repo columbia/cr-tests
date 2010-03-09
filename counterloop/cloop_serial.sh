@@ -52,7 +52,7 @@ for cnt in `seq 1 $NUMLOOPS`; do
 	echo checkpoint returned $?
 	kill -9 $pid
 	thaw
-	wait $pid
+	wait $pid 2> /dev/null
 	wait_on_crcounter
 	echo BAD > $dir/counter_out
 	$RESTART --pids < $dir/o.$cnt &
