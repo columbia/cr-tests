@@ -9,3 +9,5 @@ test_clean += $(local_dir)/cr_epoll*
 $(local_progs): CPPFLAGS += -I .
 $(local_progs): LDFLAGS += -Xlinker -dT -Xlinker libcrtest/labels.lds
 $(local_progs): $(local_dir)/libeptest.o libcrtest/libcrtest.a
+
+extra_clean += $(local_dir)/libeptest.o $(local_dir)/libeptest.a
