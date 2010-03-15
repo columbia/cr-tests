@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
 	 */
 	pid = fork();
 	if (pid == 0)
-		do_child(i);
+		do_child();
 
 	if (pid < 0) {
 		fprintf(logfp, "%d: fork() failed, error %s\n", getpid(),
