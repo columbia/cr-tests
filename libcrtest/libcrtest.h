@@ -15,6 +15,7 @@ struct record {
 
 typedef unsigned long long u64;
 
+extern void close_all_fds(void);
 extern void do_exit(int status);
 extern int test_done(void);
 extern int test_checkpoint_done();

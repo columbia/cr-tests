@@ -319,7 +319,7 @@ int create_child(int idx, void (*child_func)(int))
 
 int main(int argc, char *argv[])
 {
-	int i, c;
+	int c;
 
 	logfp = fopen(LOG_FILE, "w");
 	if (!logfp) {
@@ -345,11 +345,7 @@ int main(int argc, char *argv[])
 
 	printf("%s: Closing stdio fds and writing messages to %s\n",
 			argv[0], LOG_FILE);
-
-	for (i=0; i<100; i++)  {
-		if (fileno(logfp) != i)
-			close(i);
-	}
+	close_all_fds();
 
 	setup_test_file();
 	event_fd1 = setup_notification();

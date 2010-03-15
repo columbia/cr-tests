@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 #include <malloc.h>
+#include <dirent.h>
 #include "libcrtest.h"
 #include <sys/eventfd.h>
 #include <sys/stat.h>
@@ -138,7 +139,7 @@ int do_wait(int num_children)
 	return 0;
 }
 
-static void do_sync(FILE *fp)
+void do_sync(FILE *fp)
 {
 	int rc;
 
@@ -148,6 +149,30 @@ static void do_sync(FILE *fp)
 		fprintf(logfp, "ERROR: fsync %s\n", strerror(errno));
 }
 
+void close_all_fds(void)
+{
+	/* Close everything but stdin, stdout, and stderr */
+	DIR *proc_self_fd;
+	struct dirent *dent;
+
+	proc_self_fd = opendir("/proc/self/fd");
+	if (!proc_self_fd) {
+		perror("opendir");
+		do_exit(1);
+	}
+
+	while ((dent = readdir(proc_self_fd)) != NULL) {
+		int fd;
+
+		if (sscanf(dent->d_name, "%12d", &fd) != 1)
+			continue;
+		if ((logfp && fileno(logfp) == fd) || \
+		    (dirfd(proc_self_fd) == fd))
+			continue;
+		close(fd);
+	}
+	closedir(proc_self_fd);
+}
 
 /*
  * Return 0 if data in srcfp matches data in destfp);

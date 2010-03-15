@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <string.h>
 
+extern void close_all_fds(void);
+
 /*
  * Create a 'test-input' input file.
  *
@@ -244,9 +246,7 @@ enum test_mode {
 
 int main(int argc, char *argv[])
 {
-	int c;
-	int fd;
-	int i;
+	int fd, c;
 	char *srcfile;
 	char *destfile;
 	enum test_mode mode;
@@ -273,10 +273,7 @@ int main(int argc, char *argv[])
 	 * Cannot checkpoint process with open device files yet;
 	 */
 	printf("Closing stdio fds and writing messages to %s\n", log_fnam);
-	for (i=0; i<100; i++)  {
-		if (i != fileno(logfp))
-			close(i);
-	}
+	close_all_fds();
 
 	/*
 	 * Announce that we are now prepared for a checkpoint 
