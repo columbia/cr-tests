@@ -48,7 +48,7 @@ lbl: \
 	ret = action ; \
 \
 	if ((ckpt_op_num == op_num) || (ckpt_op_num == -1) || \
-	    (strcmp(ckpt_label, ___ ##lbl## _l) == 0)) \
+	    (ckpt_label && strcmp(ckpt_label, ___ ##lbl## _l) == 0)) \
 		do_ckpt(); \
 	if (ret < 0) { \
 		fprintf(logfp, "FAIL: %d\t%s: %s\n", \
