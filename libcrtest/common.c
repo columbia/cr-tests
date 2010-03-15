@@ -42,6 +42,9 @@ int test_checkpoint_done(void)
 {
 	int rc;
 
+	rc = access(CKPT_DRY_RUN, F_OK);
+	if (rc == 0)
+		return 1;
 	rc = access(CKPT_DONE, F_OK);
 	if (rc == 0)
 		return 1;
@@ -57,8 +60,11 @@ int test_checkpoint_done(void)
 
 void set_checkpoint_ready()
 {
-	int fd;
+	int fd, rc;
 
+	rc = access(CKPT_DRY_RUN, F_OK);
+	if (rc == 0)
+		return;
 	fd = creat(CKPT_READY, 0666);
 	if (fd < 0) {
 		fprintf(logfp, "creat(%s) failed, %s\n", CKPT_READY,
@@ -75,7 +81,7 @@ void do_ckpt(void)
 
 	set_checkpoint_ready();
 
-	rc = access(CKPT_SKIP, F_OK);
+	rc = access(CKPT_DRY_RUN, F_OK);
 	if (rc == 0)
 		return;
 	else if (errno != ENOENT)
@@ -340,9 +346,14 @@ static void create_cgroup(char *grp)
  */
 int move_to_cgroup(char *subsys, char *grp, int pid)
 {
+	char fname[MAXPATH];
+	int rc;
+
+	rc = access(CKPT_DRY_RUN, F_OK);
+	if (rc == 0)
+		return 1;
 	if (strcmp(subsys, "freezer"))
 		return 0;
-	char fname[MAXPATH];
 	if (!freezer_mountpoint()) {
 		printf("freezer cgroup is not mounted.\n");
 		do_exit(1);

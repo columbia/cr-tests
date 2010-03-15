@@ -3,7 +3,7 @@
 
 #define CKPT_READY		"checkpoint-ready"
 #define CKPT_DONE		"checkpoint-done"
-#define CKPT_SKIP		"checkpoint-skip"
+#define CKPT_DRY_RUN		"checkpoint-skip"
 #define TEST_DONE		"test-done"
 
 extern FILE *logfp;
