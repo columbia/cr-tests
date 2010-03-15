@@ -15,6 +15,10 @@
 
 #include "atomic.h"
 
+#define HAVE_LOG_LOCK 1
+#define HAVE_GETTID 1
+#include "libcrtest/log.h"
+
 #ifndef SYS_futex
 #ifdef __NR_futex
 #define SYS_futex __NR_futex
@@ -60,11 +64,6 @@ static inline long get_robust_list(pid_t pid, struct robust_list_head **rlist,
 	return syscall(__NR_get_robust_list, pid, rlist, len);
 }
 
-static inline pid_t gettid(void)
-{
-	return syscall(SYS_gettid);
-}
-
 static inline long tgkill(pid_t tgid, pid_t tid, int sig)
 {
 	return syscall(SYS_tgkill, tgid, tid, sig);
@@ -72,30 +71,5 @@ static inline long tgkill(pid_t tgid, pid_t tid, int sig)
 
 /* Allocate memory suitable for use as a futex */
 extern void *alloc_futex_mem(size_t sz);
-
-
-/* Thread-safe logging */
-extern FILE *logfp;
-extern atomic_t log_lock; /* initialize to = { 0 }; !! */
-
-/*
- * Log output with a tag (INFO, WARN, FAIL, PASS) and a format.
- * Adds information about the thread originating the message.
- *
- * Flush the log after every write to make sure we get consistent, and
- * complete logs.
- */
-#define log(tag, fmt, ...) \
-do { \
-	int __tid = gettid(); \
-	while (atomic_cmpxchg(&log_lock, 0, __tid) != 0) {} \
-	fprintf(logfp, ("%s: thread %d: " fmt), (tag), __tid, ##__VA_ARGS__ ); \
-	fflush(logfp); \
-	fsync(fileno(logfp)); \
-	while (atomic_cmpxchg(&log_lock, __tid, 0) != __tid) {} \
-} while(0)
-
-/* like perror() except to the log */
-#define log_error(s) log("FAIL", "%s: %s\n", (s), strerror(errno))
 
 #endif /* __LIBFUTEX_H */

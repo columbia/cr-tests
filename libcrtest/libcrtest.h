@@ -1,5 +1,7 @@
 #ifndef LIBCRTEST_H
 #define LIBCRTEST_H 1
+#include <unistd.h>
+#include <sys/syscall.h>
 
 #define CKPT_READY		"checkpoint-ready"
 #define CKPT_DONE		"checkpoint-done"
@@ -32,4 +34,11 @@ extern int move_to_cgroup(char *subsys, char *grp, int pid);
 extern void notify_one_event(int efd);
 extern void wait_for_events(int efd, u64 total);
 extern int setup_notification();
+
+static inline pid_t gettid(void)
+{
+	return syscall(SYS_gettid);
+}
+#define HAVE_GETTID 1
+
 #endif /* LIBCRTEST_H */
