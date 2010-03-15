@@ -23,7 +23,7 @@ fi ) | grep -E '^[[:space:]]*CONFIG_EVENTFD=y' > /dev/null 2>&1
 	exit 1
 }
 
-TESTS=( eventfd01 )
+TESTS=( rw )
 
 #make ${TESTS[@]}
 
