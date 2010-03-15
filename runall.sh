@@ -112,6 +112,12 @@ bash runtest.sh
 update_totals $? taskfs
 popd
 
+echo "Running eventfd tests"
+pushd eventfd
+bash run.sh
+update_totals $? eventfd
+popd
+
 echo $passed out of $total test groups passed.
 echo "Failed tests:"
 for t in ${failed[@]}; do echo " $t"; done
