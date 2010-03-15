@@ -7,7 +7,7 @@ verify_freezer()
 		echo "  mount -t cgroup -o freezer freezer /cgroup"
 		exit 1
 	fi
-	freezermountpoint=`echo $line | awk '{ print $2 '}`
+	freezermountpoint=`echo $line | awk '{ print $2 }'`
 	freezerdir=`mktemp -p $freezermountpoint -d` || \
 		(echo "mktemp for freezer failed"; exit 1)
 	export freezerdir="$freezerdir"
