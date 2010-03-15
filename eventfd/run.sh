@@ -49,7 +49,6 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 	T=${TESTS[$CURTEST]}
 	((IMAX = $(../${T} -N)))
 	echo "INFO: Test ${T} does:"
-	../${T} -D | sed -e 's/^/INFO:/'
 	../${T} -L | sed -e 's/^/INFO:/'
 
 	TEST_LABELS=( $(../${T} -L | tail -n '+2' | cut -f 3) )
@@ -57,7 +56,7 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 	# First we run the test taking checkpoints at all the labelled points
 	rm -f "./checkpoint-"{ready,done,skip}
 	echo "Running test: \"${T}\""
-	../${T} &
+	../${T} -f `basename $freezerdir` &
 	TEST_PID=$!
 
 	trap 'do_err; break 2' ERR EXIT
