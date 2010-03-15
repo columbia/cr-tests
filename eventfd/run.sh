@@ -76,6 +76,7 @@ for (( CURTEST = 0; CURTEST < NUMTESTS; CURTEST = CURTEST + 1 )); do
 		err_msg="BROK"
 
 		# Reset for the next iteration
+		rm "./checkpoint-ready"
 		touch "./checkpoint-done"
 		thaw
 		trap 'do_err; break 2' ERR EXIT
