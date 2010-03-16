@@ -29,7 +29,7 @@ void iohandler(int sig)
 	got_sigio = 1;
 }
 
-static void wait_for_child()
+static void wait_for_child(void)
 {
 	int rc;
 	int status;
@@ -162,7 +162,7 @@ void do_child()
  * Create a pipe that the child will try to read from and parent will
  * write to.
  */
-void setup_test_data()
+void setup_test_data(void)
 {
 	int rc;
 
