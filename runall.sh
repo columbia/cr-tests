@@ -118,6 +118,12 @@ bash run.sh
 update_totals $? eventfd
 popd
 
+echo "Running pidns tests"
+pushd pidns
+bash runtest.sh
+update_totals $? pidns
+popd
+
 echo $passed out of $total test groups passed.
 echo "Failed tests:"
 for t in ${failed[@]}; do echo " $t"; done

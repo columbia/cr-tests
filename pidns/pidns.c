@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sched.h>
 #include <signal.h>
 #include <malloc.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <syscall.h>
+#include <sys/wait.h>
 
 void write_my_pid(int which)
 {
@@ -14,7 +17,7 @@ void write_my_pid(int which)
 
 	sprintf(fnam, "./mypid.%d", which);
 	f = fopen(fnam, "w");
-	fprintf(f, "%d", syscall(__NR_gettid));
+	fprintf(f, "%d", (int) syscall(__NR_gettid));
 	fclose(f);
 }
 
@@ -54,8 +57,8 @@ int child(void *arg)
 				wait_on_restart();
 				return 0;
 			} else waitpid(pid, &status, 0);
-		} else waitpid(pid, &status, 0);
-	} else waitpid(pid, &status, 0);
+		} else exit(1);
+	} else sleep(10);
 	return 0;
 }
 
