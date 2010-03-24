@@ -44,6 +44,11 @@ void wait_on_restart(void)
 	write_my_pid(2);
 }
 
+void waitkids(void)
+{
+	while (wait(NULL) != -1) ;
+}
+
 int child(void *arg)
 {
 	int pid, status;
@@ -51,14 +56,18 @@ int child(void *arg)
 	pid = fork();
 	if (pid == 0) {
 		pid = fork();
+		if (pid == 0)
+			return 0;
+		pid = fork();
 		if (pid == 0) {
 			pid = fork();
 			if (pid == 0) {
+				sleep(1);
 				wait_on_restart();
 				return 0;
 			} else waitpid(pid, &status, 0);
-		} else exit(1);
-	} else sleep(10);
+		} else waitpid(pid, &status, 0);
+	} else waitkids();
 	return 0;
 }
 
