@@ -41,4 +41,26 @@ if [ $v -ne 0 ]; then
 	exit 5
 fi
 echo PASS
+
+echo "Test 2: self-restart"
+echo "(Please run this test without freezer mounted as well)"
+
+sed -i 's/count/xxxxx/g' $dir/cr-test.out
+
+(cd $dir; $RESTART --self -l rlog2 -i out)
+ret=$?
+if [ $ret -ne 0 ]; then
+	echo "return code was $ret"
+fi
+v=`grep ret $dir/cr-test.out | awk -F=  '{ print $2 }'`
+if [ "x$v" == "x" ]; then
+	echo "FAIL - restart return value was not in $dir/cr-test.out"
+	exit 4
+fi
+if [ $v -ne 0 ]; then
+	echo "FAIL - recorded return value was $v, should be == 0"
+	exit 5
+fi
+echo PASS
+
 exit 0
