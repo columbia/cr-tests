@@ -3,6 +3,8 @@
 # but before thawing the original program (to examine task state)
 # just running as 'runtest.sh' will run fully automatically
 
+source ../common.sh
+
 dir=`mktemp -p . -d -t cr_pidns_XXXXXXX` || (echo "mktemp failed"; exit 1)
 echo "Using output dir $dir"
 killall pidns
@@ -19,21 +21,28 @@ nsexec -cmg -P outpid ../pidns &
 while [ ! -f checkpoint-ready ]; do : ; done
 outpid=`cat outpid`
 echo started job $outpid
-echo FROZEN > /cgroup/$outpid/freezer.state
+#echo FROZEN > /cgroup/$outpid/freezer.state
+# override default freezerdir
+if [ -d $freezerdir ]; then
+	rmdir $freezerdir
+fi
+freezerdir=$freezermountpoint/$outpid
+freeze_pid $outpid
 checkpoint $outpid > checkpoint
 if [ $pause -eq 1 ]; then
 	echo press any key to continue
 	read x
 fi
 kill -9 $outpid
-echo THAWED > /cgroup/$outpid/freezer.state
+#echo THAWED > /cgroup/$outpid/freezer.state
+thaw
 touch checkpoint-done
 rm -f  mypid.2
 chmod 666 checkpoint-done
 restart --pids -i checkpoint
 wait
 
-if [ ! -f mypid.2 ]; then
+if [ ! -f "mypid.2" ]; then
 	echo "FAIL: mypid.2 was not created"
 	exit 1
 fi
