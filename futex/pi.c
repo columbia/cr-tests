@@ -271,6 +271,7 @@ int do_lock_contended_pi_futex(int retries)
 {
 	int do_print = 1;
 
+	__sync_or_and_fetch(&pi_futex->counter, FUTEX_WAITERS);
 again:
 	if (futex(&pi_futex->counter, FUTEX_LOCK_PI, atomic_read(pi_futex),
 	      NULL, NULL, 0) == 0)
