@@ -392,6 +392,34 @@ int child_static_priority(int child_num)
 	return prio_min + child_num; /* inverted: + (N - 1 - child_num);*/
 }
 
+void release_pi_futex(int *retries, int *retval, pid_t tid)
+{
+	int pi_val;
+
+	do {
+		/* Release the futex */
+		pi_val = atomic_cmpxchg(pi_futex, tid, 0);
+		if (pi_val != tid) {
+		    switch (do_unlock_contended_pi_futex(*retries)) {
+		    case -1: /* error -- we already logged the details */
+			    *retval = -100;
+			    break;
+		    case 0: /* ok */
+			    break;
+		    case 1: /* try again */
+			    if (retries) {
+				    retries--;
+				    continue;
+			    }
+			    *retval = -101;
+			    break;
+		    }
+		} /* else we were the last to hold the futex */
+	} while(retries);
+
+	log("INFO", "exited the critical section\n");
+}
+
 int kid(void *child_num_as_pointer)
 {
 	pid_t tid = gettid();
@@ -441,7 +469,8 @@ int kid(void *child_num_as_pointer)
 		pi_val = atomic_cmpxchg(pi_futex, 0, tid);
 		if (pi_val == tid) {
 			log("WARN", "found uncontended pi futex.\n");
-			goto release_pi_futex;
+			release_pi_futex(&retries, &retval, tid);
+			goto out;
 		}
 		retval--;
 
@@ -456,7 +485,8 @@ int kid(void *child_num_as_pointer)
 		retval--;
 		if (get_dynamic_priority(tid, &held_prio)) {
 			log("FAIL", "could not get priority.\n");
-			goto release_pi_futex;
+			release_pi_futex(&retries, &retval, tid);
+			goto out;
 		}
 		retval--;
 
@@ -467,7 +497,8 @@ int kid(void *child_num_as_pointer)
 			 * should wake the next highest priority waiter.
 			 */
 			log("FAIL", "Not woken in priority order.\n");
-			goto release_pi_futex;
+			release_pi_futex(&retries, &retval, tid);
+			goto out;
 		}
 		log("PASS", "Woken in priority order.\n");
 		retval = 0;
@@ -499,7 +530,8 @@ int kid(void *child_num_as_pointer)
 			/* Compare our priority to what we set above. */
 			if (get_dynamic_priority(tid, &held_prio)) {
 				retries = 100;
-				goto release_pi_futex;
+				release_pi_futex(&retries, &retval, tid);
+				goto out;
 			}
 			usleep(1000);
 			retries--;
@@ -522,26 +554,7 @@ int kid(void *child_num_as_pointer)
 		}
 	}
 
-release_pi_futex:
-	/* Release the futex */
-	pi_val = atomic_cmpxchg(pi_futex, tid, 0);
-	if (pi_val != tid) {
-	    switch (do_unlock_contended_pi_futex(retries)) {
-	    case -1: /* error -- we already logged the details */
-		    retval = -100;
-		    break;
-	    case 0: /* ok */
-		    break;
-	    case 1: /* try again */
-		    if (retries) {
-			    retries--;
-			    goto release_pi_futex;
-		    }
-		    retval = -101;
-		    break;
-	    }
-	} /* else we were the last to hold the futex */
-	log("INFO", "exited the critical section\n");
+	release_pi_futex(&retries, &retval, tid);
 out:
 	log("INFO", "exiting\n");
 	/* smp_mb() ?? */
