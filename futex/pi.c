@@ -330,7 +330,7 @@ again:
 	return -1;
 }
 
-int do_unlock_contended_pi_futex(int retries)
+int do_unlock_contended_pi_futex(void)
 {
 	if (futex(&pi_futex->counter, FUTEX_UNLOCK_PI, 1, NULL, NULL, 0) == 0)
 		return 0;
@@ -400,12 +400,12 @@ void release_pi_futex(int *retries, int *retval, pid_t tid)
 		/* Release the futex */
 		pi_val = atomic_cmpxchg(pi_futex, tid, 0);
 		if (pi_val != tid) {
-		    switch (do_unlock_contended_pi_futex(*retries)) {
+		    switch (do_unlock_contended_pi_futex(void)) {
 		    case -1: /* error -- we already logged the details */
 			    *retval = -100;
-			    break;
+			    retries--;
 		    case 0: /* ok */
-			    break;
+			    goto released;
 		    case 1: /* try again */
 			    if (retries) {
 				    retries--;
@@ -416,6 +416,7 @@ void release_pi_futex(int *retries, int *retval, pid_t tid)
 		    }
 		} /* else we were the last to hold the futex */
 	} while(retries);
+released:
 
 	log("INFO", "exited the critical section\n");
 }
