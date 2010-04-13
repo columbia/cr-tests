@@ -552,6 +552,67 @@ out:
 	return retval;
 }
 
+void set_rtprio_range(void)
+{
+	struct rlimit lim;
+	int num_tries;
+
+	/*
+	 * These are the maximums allowed by the scheduler --
+	 * not the maximum prios we are permitted to set. Hence
+	 * the rlimit bits below.
+	 */
+	prio_min = sched_get_priority_min(sched_policy);
+	prio_max = sched_get_priority_max(sched_policy);
+	if (prio_min < 0  || prio_max < 0) {
+		log_error("sched_get_priority_min|max");
+		fclose(logfp);
+		exit(1);
+	}
+
+	if ((prio_max - prio_min) < 1) {
+		log("FAIL", "Too fewer priority levels for this test.\n");
+		fclose(logfp);
+		exit(13);
+	}
+	if (N > (prio_max - prio_min)) {
+		N = prio_max - prio_min;
+		log("WARN", "Fewer priority levels than specified processes. Using %d processes (the number of priority levels)\n", N);
+	}
+
+	for (num_tries = 2; num_tries; num_tries--) {
+
+		if (getrlimit(RLIMIT_RTPRIO, &lim) == -1) {
+			log_error("getrlimit");
+			fclose(logfp);
+			exit(12);
+		}
+		if (lim.rlim_cur == RLIM_INFINITY)
+			break;
+		if (lim.rlim_cur >= N)
+			break;
+
+		/* Else we must try to adjust the allowable range */
+		if (lim.rlim_cur < N)
+			lim.rlim_cur = N;
+		if (lim.rlim_cur > lim.rlim_max)
+			lim.rlim_max = lim.rlim_cur;
+		if (setrlimit(RLIMIT_RTPRIO, &lim) == -1) {
+			log_error("setrlimit");
+			fclose(logfp);
+			exit(10);
+		}
+	}
+
+	if (getrlimit(RLIMIT_RTPRIO, &lim) == -1) {
+		log_error("getrlimit");
+		fclose(logfp);
+		exit(13);
+	}
+	log("INFO", "RLIMIT_RTPRIO: soft (cur): %ld hard (max): %ld\n",
+		lim.rlim_cur, lim.rlim_max);
+}
+
 int main(int argc, char **argv)
 {
 	struct sched_param proc_sched_param;
@@ -574,28 +635,7 @@ int main(int argc, char **argv)
 	dup2(fileno(logfp), 1);
 	dup2(fileno(logfp), 2);
 
-	prio_min = sched_get_priority_min(sched_policy);
-	prio_max = sched_get_priority_max(sched_policy);
-	if (prio_min < 0  || prio_max < 0) {
-		log_error("sched_get_priority_min|max");
-		fclose(logfp);
-		exit(1);
-	}
-
-	/* rlimit also restricts prio_max */
-	{
-		struct rlimit lim;
-		getrlimit(RLIMIT_RTPRIO, &lim);
-		log("INFO", "RLIMIT_RTPRIO: soft (cur): %ld hard (max): %ld\n",
-			lim.rlim_cur, lim.rlim_max);
-		if (lim.rlim_cur == 0) {
-			log("FAIL", "process is restricted from manipulating priorities.\n");
-			fclose(logfp);
-			exit(2);
-		}
-		if (lim.rlim_cur > prio_max)
-			prio_max = lim.rlim_cur;
-	}
+	set_rtprio_range();
 
 	proc_sched_param.sched_priority = prio_min;
 	if (sched_setscheduler(getpid(), sched_policy,
@@ -603,13 +643,6 @@ int main(int argc, char **argv)
 		log_error("sched_setscheduler");
 		fclose(logfp);
 		exit(3);
-	}
-	if (N > (prio_max - prio_min))
-		N = prio_max - prio_min;
-	if (N < 1) {
-		log("FAIL", "Not enough priority levels to run test.\n");
-		fclose(logfp);
-		exit(4);
 	}
 
 	log("INFO", "running test with %d children\n", N);
