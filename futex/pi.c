@@ -401,7 +401,7 @@ void release_pi_futex(int *retries, int *retval, pid_t tid)
 		/* Release the futex */
 		pi_val = atomic_cmpxchg(pi_futex, tid, 0);
 		if (pi_val != tid) {
-		    switch (do_unlock_contended_pi_futex(void)) {
+		    switch (do_unlock_contended_pi_futex()) {
 		    case -1: /* error -- we already logged the details */
 			    *retval = -100;
 			    retries--;
