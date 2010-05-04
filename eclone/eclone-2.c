@@ -92,10 +92,10 @@ int main()
 			"in use\n");
 		return 0;
 	} else if (pid < 0) {
-		printf("ERROR: eclone(): errno %d\n", pid);
+		printf("BROK: eclone(): errno %d\n", pid);
 		return 1;
 	}
-	printf("ERROR: eclone succeeded, should have returned -EBUSY\n");
+	printf("FAIL: eclone succeeded, should have returned -EBUSY\n");
 
 	printf("[%d, %d]: Parent waiting for %d\n", getpid(), gettid(), pid);
 
