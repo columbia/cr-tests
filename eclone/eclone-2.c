@@ -64,14 +64,11 @@ static int do_eclone(int (*child_fn)(void *), void *child_arg,
 		fflush(stdout);
 	}
 
-	if (rc < 0 && errno == EAGAIN) {
-		printf("PASS: Unable to create a process with a pid that is "
-			"in use\n");
-		exit(0);
-	} else {
-		printf("ERROR: eclone(): rc %d, errno %d\n", rc, errno);
-		return rc;
-	}
+	if (rc < 0)
+		rc = -errno;
+
+	return rc;
+
 }
 
 int main()
@@ -90,27 +87,29 @@ int main()
 
 	pid = do_eclone(do_child, CHILD_ARG, flags, nr_pids, pids);
 
-	if (verbose) {
-		printf("[%d, %d]: Parent waiting for %d\n", getpid(),
-					gettid(), pid);
+	if (pid == -EBUSY) {
+		printf("PASS: Unable to create a process with a pid that is "
+			"in use\n");
+		return 0;
+	} else if (pid < 0) {
+		printf("ERROR: eclone(): errno %d\n", pid);
+		return 1;
 	}
+
+	printf("[%d, %d]: Parent waiting for %d\n", getpid(), gettid(), pid);
 
 	rc = waitpid(pid, &status, __WALL);
-	if (rc < 0) {
-		printf("ERROR: ");
-		verbose = 1;
-	}
 
-	if (verbose) {
-		printf("\twaitpid(): child %d, rc %d, error %d, status 0x%x\n",
-				getpid(), rc, errno, status);
-		if (rc >=0) {
-			if (WIFEXITED(status)) {
-				printf("\t EXITED, %d\n", WEXITSTATUS(status));
-			} else if (WIFSIGNALED(status)) {
-				printf("\t SIGNALED, %d\n", WTERMSIG(status));
-			}
+	printf("\twaitpid(): child %d, rc %d, error %d, status 0x%x\n",
+			getpid(), rc, errno, status);
+
+	if (rc >=0) {
+		if (WIFEXITED(status)) {
+			printf("\t EXITED, %d\n", WEXITSTATUS(status));
+		} else if (WIFSIGNALED(status)) {
+			printf("\t SIGNALED, %d\n", WTERMSIG(status));
 		}
 	}
-	return 0;
+
+	return 1;
 }
