@@ -22,9 +22,6 @@ pid_t pids[2];
 
 int do_child(void *arg)
 {
-	printf("FAIL: Child created with [%d, %d], but we expected child "
-			"creation to fail since pid is in use\n", gettid(),
- 			getpid());
 	exit(2);
 }
 
@@ -37,7 +34,7 @@ static int do_eclone(int (*child_fn)(void *), void *child_arg,
 
 	stack = genstack_alloc(STACKSIZE);
 	if (!stack) {
-		printf("ERROR: genstack_alloc() returns NULL for size %d\n",
+		printf("BROK: genstack_alloc() returns NULL for size %d\n",
 				STACKSIZE);
 		exit(1);
 	}
