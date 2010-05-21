@@ -9,7 +9,14 @@
 
 void *growmem(int sz)
 {
-	void *m = malloc(sz);
+#ifndef USE_MALLOC
+	void *m = mmap (NULL, sz, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON,
+		-1, 0);
+#else
+	void *m = malloc (sz);
+#endif
+        if (do_dirty)
+		memset(m, '*', sz);
 	return m;
 }
 
