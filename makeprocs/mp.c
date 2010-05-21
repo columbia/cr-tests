@@ -6,6 +6,10 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <string.h>
+#include <sys/mman.h>
+
+int do_dirty = 0;
 
 void *growmem(int sz)
 {
@@ -22,8 +26,9 @@ void *growmem(int sz)
 
 void usage(char *me)
 {
-	printf("Usage: %s [-n <numprocs>] [-m memsz] [-i ipcsz]\n", me);
+	printf("Usage: %s [-n <numprocs>] [-m memsz] [-d memsz]\n", me);
 	printf(" to put me in freezer, start me with nsexec -g\n");
+	printf(" -d is like -m but dirtying the memory\n");
 	exit(1);
 }
 
@@ -44,7 +49,7 @@ int exist_file(char *fnam)
 
 int do_child(int n, int mem)
 {
-	void *v;
+	void *v = NULL;
 	if (mem) {
 		v = growmem(mem);
 		if (!v) {
@@ -54,6 +59,10 @@ int do_child(int n, int mem)
 	}
 	while (!exist_file("checkpoint-done"))
 		sleep(1);
+#ifndef USE_MALLOC
+	if (v)
+		munmap(v, mem);
+#endif
 	exit(0);
 }
 
@@ -62,7 +71,6 @@ int main(int argc, char *argv[])
 	int c;
 	int numprocs = 1;
 	int memsz = 0;
-	int ipcsz=0;
 	int i, pid, status;
 
 	if (argc < 2)
@@ -70,7 +78,7 @@ int main(int argc, char *argv[])
 	unlink("checkpoint-done");
 	unlink("ready");
 	unlink("done");
-	while ((c = getopt(argc, argv, "hn:m:i:")) != -1) {
+	while ((c = getopt(argc, argv, "hn:m:d:")) != -1) {
 		switch(c) {
 		case 'n':
 			numprocs = atoi(optarg);
@@ -78,16 +86,14 @@ int main(int argc, char *argv[])
 		case 'm':
 			memsz = atoi(optarg);
 			break;
-		case 'i':
-			printf("ipc not yet handled\n");
+		case 'd':
+			memsz = atoi(optarg);
+			do_dirty = 1;
+			break;
 		case 'h':
 		default:
 			usage(argv[0]);
 		}
-	}
-
-	if (ipcsz) {
-		/* alloc ipc sz */
 	}
 
 	printf("starting %d tasks with %d memory\n", numprocs, memsz);
