@@ -17,6 +17,5 @@ do
 	for i in `seq 1 30`; do
 		echo "starting round $i (memsize $s)"
 		sh runtest.sh -n 10 -d $s > logf.$s.$i 2>&1
-		mv out ckpt.d.$s.$i
 	done
 done

@@ -19,6 +19,5 @@ do
 	for i in `seq 1 30`; do
 		echo "starting round $i (ntasks $s)"
 		sh runtest.sh -n $s > logf.$s.$i 2>&1
-		mv out ckpt.ntask.$s.$i
 	done
 done
