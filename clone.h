@@ -25,6 +25,8 @@
 #    define __NR_unshare 303
 #elif __powerpc__
 #    define __NR_unshare 282
+#elif __arm__
+#    define __NR_unshare 337
 #else
 #    error "Architecture not supported"
 #endif

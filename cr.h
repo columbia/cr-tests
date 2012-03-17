@@ -65,6 +65,16 @@
 #define __NR_restart 325
 #endif
 
+#elif __arm__
+
+#ifndef __NR_checkpoint
+#define __NR_checkpoint 377
+#endif
+
+#ifndef __NR_restart
+#define __NR_restart 378
+#endif
+
 #elif __s390x__
 
 #ifndef __NR_checkpoint
@@ -100,7 +110,12 @@
 #define __NR_restart 302
 #endif
 
+#else /* non-supported architecture */
+
+#error "Architecture not supported"
+
 /* x86_64 unsupported. */
 /* xtensa unsupported. */
+
 #endif /* arch-specific sections */
 #endif /* _LINUX_CHECKPOINT_H_ */

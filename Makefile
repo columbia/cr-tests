@@ -25,10 +25,10 @@ all:
 
 # Prefix CC, AS, LD, AR for cross compilation
 CROSS_COMPILE ?=
-CC ?= $(CROSS_COMPILE)gcc
-LD ?= $(CROSS_COMPILE)ld
-AS ?= $(CROSS_COMPILE)as
-AR ?= $(CROSS_COMPILE)ar
+CC = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
+AS = $(CROSS_COMPILE)as
+AR = $(CROSS_COMPILE)ar
 
 include $(addsuffix /module.mk,$(modules))
 
