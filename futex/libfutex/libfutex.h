@@ -16,7 +16,6 @@
 #include "atomic.h"
 
 #define HAVE_LOG_LOCK 1
-#define HAVE_GETTID 1
 #include "libcrtest/log.h"
 
 #ifndef SYS_futex
@@ -32,6 +31,8 @@
 #define SYS_futex 238
 #elif __powerpc__
 #define SYS_futex 221
+#elif __arm__
+#define SYS_futex 240
 #else
 #error "libfutex not supported on this architecure yet. If your arch and kernel support futexes then it is just syscall glue plus some basic atomic operations. So a patch would be fairly easy and welcome upstream."
 #endif
@@ -39,6 +40,12 @@
 
 #ifndef __NR_futex
 #define __NR_futex SYS_futex
+#endif
+
+#if (!defined(__NR_set_robust_list) || !defined(__NR_get_robust_list)) && defined(__arm__)
+#define __NR_set_robust_list 366
+#define __NR_get_robust_list 339
+#define SYS_tgkill 296
 #endif
 
 #ifndef PROT_SEM

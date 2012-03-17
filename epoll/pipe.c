@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 	};
 	int op_num = 0;
 	int tube[2];
-	int efd;
+	int efd = -1;
 	int ec = EXIT_FAILURE;
 	int ret;
 	char rbuf[128];
@@ -170,7 +170,7 @@ label(wait_write,
 
 label(do_write,
 	ret, write(tube[1], HELLO, strlen(HELLO) + 1));
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to write all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;
@@ -200,7 +200,7 @@ label(wait_read,
 
 label(do_read,
 	ret, read(tube[0], rbuf, strlen(HELLO) + 1));
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;

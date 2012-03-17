@@ -5,7 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
-#include <wait.h>
+#include <sys/wait.h>
 #include "libcrtest.h"
 
 #define TEST_FILE1	"data.d/data.filelease2"

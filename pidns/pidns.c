@@ -7,8 +7,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <syscall.h>
+#include <sys/syscall.h>
 #include <sys/wait.h>
+
+#ifndef CLONE_NEWPID
+#define CLONE_NEWPID	0x20000000
+#endif
+
+extern int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...);
 
 void write_my_pid(int which)
 {
@@ -17,7 +23,8 @@ void write_my_pid(int which)
 
 	sprintf(fnam, "./mypid.%d", which);
 	f = fopen(fnam, "w");
-	fprintf(f, "%d", (int) syscall(__NR_gettid));
+	//fprintf(f, "%d", (int) syscall(__NR_gettid));
+	fprintf(f, "%d", gettid());
 	fclose(f);
 }
 
@@ -81,7 +88,7 @@ int main()
 	if (!stack) {
 		return -1;
 	}
-	childstack = stack + stacksize;
+	childstack = (char *)stack + stacksize;
 
 	close(0);
 	close(1);

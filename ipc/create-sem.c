@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
-#include <sys/sem.h>
+#include <linux/rwsem.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 

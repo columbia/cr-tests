@@ -5,6 +5,9 @@ FILE *logfp = NULL;
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP 0x2000
 #endif
+#ifndef EPOLLONESHOT
+#define EPOLLONESHOT (1<< 30) /* Linux 3.0.8 */
+#endif
 /* Print EPOLL flag */
 #define peflag(flag) \
 do { \

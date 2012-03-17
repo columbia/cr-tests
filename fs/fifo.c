@@ -19,6 +19,16 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 
+#ifndef FS_APPEND_FL
+#define FS_APPEND_FL	0x00000020
+#endif
+#ifndef FS_IMMUTABLE_FL
+#define FS_IMMUTABLE_FL	0x00000010
+#endif
+#ifndef FS_UNRM_FL
+#define FS_UNRM_FL	0x00000002
+#endif
+
 /* waitpid() and W* status macros */
 #include <sys/wait.h>
 

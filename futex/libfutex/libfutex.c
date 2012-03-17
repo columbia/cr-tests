@@ -8,14 +8,12 @@ void *alloc_futex_mem(size_t sz)
 	size_t pagesize = sysconf(_SC_PAGE_SIZE);
 	int rc;
 
-	if (pagesize == -1)
+	if (pagesize == (size_t)-1)
 		return NULL;
 
-	rc = posix_memalign(&p, pagesize, sz);
-	if (rc != 0) {
-		errno = rc;
+	p = memalign(pagesize, sz);
+	if (!p)
 		return NULL;
-	}
 
 	rc = mprotect(p, sz, PROT_READ|PROT_WRITE|PROT_SEM);
 	if (rc == 0)

@@ -60,9 +60,3 @@ int eclone(int (*fn)(void *), void *fn_arg, int clone_flags_low,
 #else
 #    error "Architecture not supported for gettid()"
 #endif
-
-/* gettid() is sometimes more useful than getpid() when using clone() */
-static inline int gettid()
-{
-	return syscall(__NR_gettid, 0, 0, 0);
-}

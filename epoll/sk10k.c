@@ -86,7 +86,7 @@ void set_default_num_sk(void)
 	getrlimit(RLIMIT_NOFILE, &lim);
 	num_sk = lim.rlim_cur/2;
 
-	num_fds_open = scandir("/proc/self/fd", &dents, 0, alphasort);
+	num_fds_open = scandir("/proc/self/fd", &dents, 0, (void *)alphasort);
 	if (num_fds_open < 0)
 		perror("scandir");
 	else {
@@ -160,7 +160,7 @@ void parse_args(int argc, char **argv)
 					struct rlimit lim;
 					getrlimit(RLIMIT_NOFILE, &lim);
 					fprintf(stdout, "INFO: RLIMIT_NOFILE: soft (cur): %ld hard (max): %ld\n", lim.rlim_cur, lim.rlim_max);
-					if (num_sk >= lim.rlim_cur) {
+					if ((unsigned int)num_sk >= lim.rlim_cur) {
 						fprintf(stderr, "WARN: process is restricted from opening %d sockets. Opening %ld instead.\n", num_sk, lim.rlim_cur);
 						num_sk = lim.rlim_cur;
 					}
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	struct epoll_event *evs = NULL;
 	int *sk = NULL;
 	int op_num = 0;
-	int efd;
+	int efd = -1;
 	int ec = EXIT_FAILURE;
 	int ret = 0;
 	int i;
@@ -258,7 +258,7 @@ label(wait_write,
 	}
 	for (i = 0; i < num_sk; i++) {
 		ret = write(sk[i], HELLO, strlen(HELLO) + 1);
-		if (ret < (strlen(HELLO) + 1)) {
+		if (ret < (int)(strlen(HELLO) + 1)) {
 			log("FAIL", "Unable to write all %zu bytes of \"%s\" to sk[%d] (%d)\n",
 				 strlen(HELLO) + 1, HELLO, i, sk[i]);
 			goto out;
@@ -289,7 +289,7 @@ label(wait_read,
 label(do_read, ret, ret + 0);
 	for (i = 0; i < num_sk; i++) {
 		ret = read(sk[i], rbuf, strlen(HELLO) + 1);
-		if (ret < (strlen(HELLO) + 1)) {
+		if (ret < (int)(strlen(HELLO) + 1)) {
 			log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 				 strlen(HELLO) + 1, HELLO);
 			goto out;

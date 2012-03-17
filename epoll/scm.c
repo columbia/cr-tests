@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 	pid_t kid;
 	int op_num = 0;
 	int tube[2];
-	int efd, sk[2];
+	int efd = -1, sk[2];
 	int ec = EXIT_FAILURE;
 	int ret;
 	char rbuf[128];
@@ -178,7 +178,7 @@ label(create,
 		char *msg_bytes = "efd,tube[0],tube[1]";
 		int status;
 		int *fdp;
-		struct msghdr msg = {0};
+		struct msghdr msg = {NULL,0,NULL,0,NULL,0,0};
 		struct cmsghdr *cmsg;
 		struct iovec iobase;
 		char cbuf[CMSG_SPACE(sizeof(int)*3)];
@@ -213,7 +213,7 @@ label(create,
 		exit(status);
 	} else {
 		char msg_bytes[1024];
-		struct msghdr msg = {0};
+		struct msghdr msg = {NULL,0,NULL,0,NULL,0,0};
 		struct cmsghdr *cmsg;
 		struct iovec iobase;
 		int *fdp;
@@ -288,7 +288,7 @@ label(wait_write,
 
 label(do_write,
 	ret, write(tube[1], HELLO, strlen(HELLO) + 1));
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to write all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;
@@ -318,7 +318,7 @@ label(wait_read,
 
 label(do_read,
 	ret, read(tube[0], rbuf, strlen(HELLO) + 1));
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;

@@ -20,7 +20,7 @@ typedef unsigned long long u64;
 extern void close_all_fds(void);
 extern void do_exit(int status);
 extern int test_done(void);
-extern int test_checkpoint_done();
+extern int test_checkpoint_done(void);
 extern void set_checkpoint_ready(void);
 extern void do_ckpt(void);
 extern int do_wait(int num_children);
@@ -33,12 +33,6 @@ extern int move_to_cgroup(char *subsys, char *grp, int pid);
 
 extern void notify_one_event(int efd);
 extern void wait_for_events(int efd, u64 total);
-extern int setup_notification();
-
-static inline pid_t gettid(void)
-{
-	return syscall(SYS_gettid);
-}
-#define HAVE_GETTID 1
+extern int setup_notification(void);
 
 #endif /* LIBCRTEST_H */

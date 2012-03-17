@@ -48,6 +48,7 @@
 #include "libcrtest/libcrtest.h"
 
 
+extern int clone(int (*fn)(void *), void *child_stack, int flags, void *arg, ...);
 
 /*
  * The globals are set up from the main thread and then left untouched
@@ -61,7 +62,7 @@ atomic_t log_lock = { 0 };
  * Number of child processes to WAIT on futex -- must be less than number
  * of priority levels available.
  */
-int N = 3;
+unsigned int N = 3;
 
 const int clone_flags = CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_VM|CLONE_SYSVSEM|SIGCHLD; //|CLONE_THREAD|CLONE_PARENT;
 int prio_min, prio_max, sched_policy = SCHED_RR;
@@ -159,7 +160,7 @@ void dump_dynamic_priorities(void)
 	char buffer[4096];
 	char *pos;
 	int prio;
-	int i;
+	unsigned int i;
 
 	pos = buffer;
 	for (i = 0; i < N; i++) {
@@ -250,7 +251,8 @@ again:
 
 int wake_waitq(atomic_t *wq, int retries)
 {
-	int woken = 0, ret;
+	unsigned int woken = 0;
+	int ret;
 
 	atomic_set(wq, 1);
 	do {
@@ -514,7 +516,7 @@ int kid(void *child_num_as_pointer)
 		retval--;
 
 		/* Now we have the pi futex but nobody else is waiting for it */
-		for (retries = 1000; atomic_read(&dumb_barrier[0]) < (N - 1);
+		for (retries = 1000; atomic_read(&dumb_barrier[0]) < (int)(N - 1);
 		     retries--)
 			usleep(1000);
 		retval--;
@@ -590,7 +592,7 @@ void set_rtprio_range(void)
 		fclose(logfp);
 		exit(13);
 	}
-	if (N > (prio_max - prio_min)) {
+	if ((int)N > (prio_max - prio_min)) {
 		N = prio_max - prio_min;
 		log("WARN", "Fewer priority levels than specified processes. Using %d processes (the number of priority levels)\n", N);
 	}
@@ -695,7 +697,7 @@ int main(int argc, char **argv)
 	fflush(logfp);
 	fflush(stderr);
 	fflush(stdout);
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < (int)N; i++) {
 
 		char *new_stack = malloc(SIGSTKSZ*8);
 		kids[i] = clone(kid, new_stack + SIGSTKSZ*8, clone_flags, (void*)(long)i);
@@ -704,7 +706,7 @@ int main(int argc, char **argv)
 		log("INFO", "thread %d started.\n", kids[i]);
 	}
 
-	if (i < N) {
+	if (i < (int)N) {
 		log_error("couldn't start N children");
 		log("INFO", "killing %d child tasks.\n", i);
 		for (; --i > -1;)

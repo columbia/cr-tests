@@ -109,7 +109,7 @@ void parse_args(int argc, char **argv)
 					struct rlimit lim;
 					getrlimit(RLIMIT_NOFILE, &lim);
 					fprintf(stdout, "INFO: RLIMIT_NOFILE: soft (cur): %ld hard (max): %ld\n", lim.rlim_cur, lim.rlim_max);
-					if (num_efd >= lim.rlim_cur) {
+					if ((unsigned int)num_efd >= lim.rlim_cur) {
 						fprintf(stderr, "WARN: process is restricted from opening %d sockets. Opening %ld instead.\n", num_efd, lim.rlim_cur);
 						num_efd = lim.rlim_cur;
 					}
@@ -257,7 +257,7 @@ label(wait_write, ret, ret + 0);
 		goto out;
 label(do_write,
 	ret, write(pfd[1], HELLO, strlen(HELLO) + 1));
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to write all %zu bytes of \"%s\" to %d\n",
 			 strlen(HELLO) + 1, HELLO, pfd[0]);
 		goto out;
@@ -291,7 +291,7 @@ label(wait_read, ret, ret + 0);
 
 label(do_read, ret, ret + 0);
 	ret = read(pfd[0], rbuf, strlen(HELLO) + 1);
-	if (ret < (strlen(HELLO) + 1)) {
+	if (ret < (int)(strlen(HELLO) + 1)) {
 		log("FAIL", "Unable to read all %zu bytes of \"%s\"\n",
 			 strlen(HELLO) + 1, HELLO);
 		goto out;

@@ -6,4 +6,3 @@ SECTIONS {
 		___labels_end = . ;
 	}
 }
-INSERT BEFORE .data ;

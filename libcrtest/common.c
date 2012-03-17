@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <wait.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <string.h>
 #include <malloc.h>
@@ -19,7 +19,7 @@ void do_exit(int status)
 		fflush(logfp);
 		fclose(logfp);
 	}
-	_Exit(status);
+	_exit(status);
 }
 
 int test_done(void)

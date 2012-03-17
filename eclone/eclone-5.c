@@ -153,7 +153,7 @@ int main()
 				STACKSIZE);
 		exit(1);
 	}
-	stack += (STACKSIZE - 1);
+	stack = (char *)stack + (STACKSIZE - 1);
 
 	nested_ns = 1;
 	flags = SIGCHLD|CLONE_NEWPID|CLONE_NEWNS;

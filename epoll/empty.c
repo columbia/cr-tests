@@ -100,7 +100,7 @@ void parse_args(int argc, char **argv)
 
 int main (int argc, char **argv)
 {
-	int efd, ret = 0;
+	int efd = -1, ret = 0;
 	int op_num = 0;
 
 	parse_args(argc, argv);

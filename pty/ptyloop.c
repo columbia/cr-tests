@@ -13,6 +13,20 @@
 #include <asm/unistd.h>
 #include <sys/syscall.h>
 
+#ifndef S_IRUSR
+#define S_IRUSR 00400
+#endif
+#ifndef S_IWUSR
+#define S_IWUSR 00200
+#endif
+
+extern int move_to_cgroup(char *subsys, char *grp, int pid);
+
+static int posix_openpt(int flags)
+{
+	    return open("/dev/ptmx", flags);
+}
+
 int main(int argc, char *argv[])
 {
 	pid_t pid;

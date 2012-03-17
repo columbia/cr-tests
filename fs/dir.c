@@ -56,7 +56,7 @@ void parse_args(int argc, char **argv)
 	while (1) {
 		char c;
 		c = getopt_long(argc, argv, "LNhl:n:", long_options, NULL);
-		if (c == -1)
+		if (c == (char)-1)
 			break;
 		switch(c) {
 			case 'L':
@@ -119,7 +119,8 @@ int main (int argc, char **argv)
 label(mkdir,  ret, mkdir(pathname, S_IRWXU));
 label(open,    fd, open(pathname, O_RDONLY|O_DIRECTORY));
 label(rmdir,  ret, rmdir(pathname));
-label(getdent,ret, syscall(SYS_getdents, fd, buffer, sizeof(buffer)));
+//label(getdent,ret, syscall(SYS_getdents, fd, buffer, sizeof(buffer)));
+label(getdent,ret, getdents( fd, buffer, sizeof(buffer)));
 label(close,  ret, close(fd));
 
 	if (strcmp(buffer, fdcontents) != 0) {
