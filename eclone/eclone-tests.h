@@ -56,6 +56,7 @@ int eclone(int (*fn)(void *), void *fn_arg, int clone_flags_low,
 #elif __powerpc__
 #    define __NR_gettid	207
 #elif __arm__
+/* Don't redefine for ARM - already available */
 #else
 #    error "Architecture not supported for gettid()"
 #endif
